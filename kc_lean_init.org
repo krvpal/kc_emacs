@@ -1,0 +1,2943 @@
+#+title: Kc_lean_init
+#+property: header-args :tangle init.el :comments link :results silent :noweb yes
+#+startup: overview logdrawer
+
+
+* General
+** Emacs
+#+begin_src emacs-lisp
+(use-package emacs
+  :delight
+  (visual-line-mode)
+  
+  :preface
+  <<custom_func>>
+
+  :config
+
+  (add-to-list 'load-path "~/.emacs.d/lisp")
+
+  (let ((default-directory (expand-file-name "lisp" user-emacs-directory)))
+    (normal-top-level-add-subdirs-to-load-path))
+
+
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (menu-bar-mode -1)
+  
+  (global-display-line-numbers-mode -1)
+  (setq line-number-display-limit-width 2000)
+
+  (setq ring-bell-function 'ignore)
+
+  (recentf-mode 1)
+  (setq recentf-max-saved-items 200)
+
+  ;; remember minibuffer prompt
+  (setq history-length 25)
+  (savehist-mode 1)
+
+  ;; Remember and restore the last cursor location of opened files
+  (save-place-mode 1)
+
+  ;; separate custom.el
+  (setq custom-file (locate-user-emacs-file "custom.el"))
+  (load custom-file 'noerror 'nomessage)
+
+  ;; Don't pop up UI dialogs when prompting
+  (setq use-dialog-box nil)
+
+  ;; Revert buffers when the underlying file has changed
+  (global-auto-revert-mode 1)
+
+  ;; Revert Dired and other buffers
+  (setq global-auto-revert-non-file-buffers t)
+
+  (setq inhibit-startup-message t)
+  
+  (setq mac-right-option-modifier nil)
+  (setq mac-option-modifier 'meta)
+
+  (setq mouse-wheel-tilt-scroll t)
+  (setq mouse-wheel-flip-direction t)
+
+  ;; disable making backup files that end in ~
+  (setq make-backup-files nil)
+  ;; disable making auto-save files that begin and end in #
+  (setq auto-save-default nil)
+  ;; disable lock files that start with .#file_name
+  (setq create-lockfiles nil)
+
+  ;; stop blinking cursor
+  (blink-cursor-mode 0)
+  ;; don't show cursor frame in unselected window
+  (setq-default cursor-in-non-selected-windows nil)
+
+  (setq custom-theme-directory "~/.emacs.d/themes/")
+  (load-theme 'kc-sentient t)
+
+  ;; to be able to simply use 'y' or 'n' instead of 'yes' or 'no'
+  ;; for all such prompts
+  (defalias 'yes-or-no-p 'y-or-n-p)
+
+  ;; use escape key globally as keyboard-escape-quit
+  ;; seems to be just a precautionary binding, doesn't do much in evil
+  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+  ;; package.el add melpa-stable
+  (require 'package)
+  (add-to-list 'package-archives
+               '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+
+  (add-to-list 'package-archives
+               '("melpa" . "http://melpa.org/packages/") t)
+
+  ;; modeline customisation
+  (display-time-mode)
+  (line-number-mode)
+  (column-number-mode)
+  (size-indication-mode)
+  (display-battery-mode)
+
+  (setq-default mode-line-format
+				'("%e" mode-line-front-space
+                  mode-line-mule-info
+                  mode-line-client
+                  mode-line-modified
+                  mode-line-remote
+                  mode-line-frame-identification
+                  mode-line-buffer-identification
+				  "    "
+                  mode-line-position
+                  evil-mode-line-tag
+                  vc-mode
+                  "  " "%n" "  "
+                  ;; Right-align everything after this
+                  (:eval (propertize " "
+                                     'display `((space :align-to (- (+ right right-fringe right-margin)
+                                                                    ,(string-width (format-mode-line (append mode-line-modes mode-line-misc-info))))))))
+				  mode-line-modes
+                  mode-line-misc-info
+                  mode-line-end-spaces))
+
+
+  ;; disable title names
+  (setq frame-title-format "")
+  (setq icon-title-format nil)
+
+  (setq delete-by-moving-to-trash t)
+
+  (setq tab-always-indent nil) ;; other options were not allowing to insert tab char
+  (setq-default indent-tabs-mode nil) ;; was interfering with newline indent in ledger-mode
+
+  (setq-default truncate-lines t)
+  ;; If enabled (and `truncate-lines' was disabled), soft wrapping no longer
+  ;; occurs when that window is less than `truncate-partial-width-windows'
+  ;; characters wide. We don't need this, and it's extra work for Emacs otherwise,
+  ;; so off it goes.
+  (setq truncate-partial-width-windows nil)
+
+  ;; in the fringe area show sign if lines empty at end of buffer
+  (setq-default indicate-empty-lines t)
+
+  ;; when in a minibuffer, allow recursive use by other commands
+  (setq enable-recursive-minibuffers t)
+
+  (minibuffer-depth-indicate-mode 1)
+
+  ;; right click mouse menu
+  (context-menu-mode)
+
+  (setq completion-ignore-case t)
+
+  (setq-default tab-width 4) 
+
+  (setq sentence-end-double-space nil)
+
+  (electric-pair-mode)
+
+  )
+#+end_src
+** Custom functions
+:PROPERTIES:
+:header-args: :tangle no :noweb-ref custom_func
+:END:
+*** Add-to-list multiple
+#+begin_src emacs-lisp
+(defun kc-add-to-list-multiple (var things)
+  "Add multiple items to add-to-list at once, without repeating. This is a macro, the first
+argument is the quoted variable that is a list, the second argument is a quoted parenthetical
+list of things to add to the list, can be double quoted for strings and such. See example of
+auto-capitalize-words variable that has been set using this."
+  (cl-dolist (item things)
+    (add-to-list var item t))
+  )
+#+end_src
+*** Insert parenthesis
+- To use a simpler key than having to reach up to insert parenthesis.
+#+begin_src emacs-lisp
+(defun kc-insert-parenthesis ()
+  (interactive)
+  (if (use-region-p)
+      (insert-parentheses)
+    (if (save-excursion
+          (beginning-of-line)
+          (looking-at "[ \t]*$"))
+        (progn
+          (insert "()")
+          (backward-char 1)
+          (evil-insert nil)
+          )
+      (progn
+        (forward-char 1)
+        (insert "()")
+        (backward-char 1)
+        (evil-insert nil)
+        )))
+  )
+#+end_src
+* Priority packages
+** General keys
+#+begin_src emacs-lisp
+(use-package general
+  :ensure t
+  :config
+
+  (general-define-key
+   :states '(normal visual)
+   :keymaps 'override
+   "C--" #'text-scale-decrease
+   "C-=" #'text-scale-increase
+   "gc" 'comment-dwim
+   "gs SPC" 'evil-avy-goto-char-timer
+   "gsj" 'avy-goto-line-below
+   "gsk" 'avy-goto-line-above
+   "zh" #'kc-evil-scroll-left
+   "zl" #'kc-evil-scroll-right
+   )
+
+  (general-define-key
+   :keymaps 'universal-argument-map
+   "SPC u" 'universal-argument-more
+   )
+
+  (general-create-definer leader
+    ;; check if below should be states instead of keymaps?
+    :states '(normal insert visual emacs)
+    :keymaps 'override
+    :prefix "SPC"
+    :non-normal-prefix "M-SPC"
+    :global-prefix "C-SPC")
+
+  (leader
+	"q" #'quoted-insert
+    "'" #'completion-at-point
+    "." #'find-file
+    ":" #'execute-extended-command
+    "<" #'consult-buffer
+    "<escape>" #'org-roam-node-find
+    "<return>" #'bookmark-jump
+    "<tab> <tab>" #'persp-switch
+    "<tab> d" #'persp-kill
+    "<tab> h" #'persp-prev
+    "<tab> l" #'persp-next
+    "<tab> n" #'persp-switch
+    "A" #'backward-sentence
+    "D" #'org-roam-dailies-capture-today
+    "E" #'forward-sentence
+    "F" (lambda () (interactive) (org-roam-dailies-goto-date nil "d"))
+    "I" #'imenu-list-smart-toggle
+    "J" #'kc-jump-to-projects
+    "R" #'org-roam-buffer-toggle
+    "S" #'shell
+    "S-<escape>" #'kc-org-roam-file-node-find
+    "U" #'link-hint-copy-link
+    "WW" #'writeroom-mode
+    "Ww" #'kc-refresh-writeroom-mode
+    "X" #'org-capture
+    "[b" #'previous-buffer
+    "]b" #'next-buffer
+    "a" #'evil-beginning-of-line
+    "b" '(:ignore t :which-key "buffer")
+    "bK" #'kc-kill-all-buffers
+    "bb" #'switch-to-buffer
+    "bc" #'clone-indirect-buffer
+    "bd" #'bookmark-delete
+    "bk" #'kill-current-buffer
+    "br" #'revert-buffer
+    "bs" #'basic-save-buffer
+    "d" #'cfw:open-org-calendar
+    "e" #'evil-end-of-line
+    "fr" #'consult-recent-file
+    "gg" #'magit
+    "hF" #'describe-face
+    "hV" #'set-variable
+    "hc" #'describe-key-briefly
+    "he" #'view-echo-area-messages
+    "hf" #'helpful-callable
+    "hk" #'helpful-key
+    "hl" #'view-lossage
+    "ho" #'helpful-symbol
+    "hv" #'helpful-variable
+    "i" #'kc-insert-parenthesis
+    "j" #'good-scroll-up
+    "k" #'good-scroll-down
+    "l" #'recenter-top-bottom
+    "og" #'kc-kanban-gtd
+    "r" #'evil-redo
+    "sd" #'consult-ripgrep
+    "sq" #'query-replace
+    "ss" #'consult-line
+    "t"  '(:ignore t :which-key "toggles")
+    "tf" #'toggle-frame-fullscreen
+    "tw" #'visual-line-mode
+    "u" #'universal-argument
+    "vt" #'kc-org-babel-tangle-special
+    "wO" #'balance-windows
+    "wc" #'ace-delete-window
+    "wh" #'evil-window-left
+    "wj" #'evil-window-down
+    "wk" #'evil-window-up
+    "wl" #'evil-window-right
+    "wo" #'maximize-window
+    "wq" #'evil-quit
+    "wr" #'kc-transient-resize-window
+    "ws" #'evil-window-split
+    "wu" #'winner-undo
+    "wv" #'evil-window-vsplit
+    "ww" #'ace-window
+    "xb" #'ibuffer 
+    "xe" #'eval-last-sexp
+    "xh" #'mark-whole-buffer
+    ))
+#+end_src
+** Evil mode
+*** Evil core
+#+begin_src emacs-lisp
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)       ;use evil-collection instead
+  (setq evil-want-C-u-scroll t)
+  (setq evil-want-C-i-jump nil)         ;can use tab in terminal then
+  (setq evil-want-minibuffer t)
+
+  :preface
+  (defun kc-evil-scroll-right()
+    (interactive)
+    (evil-scroll-column-right 6)
+    )
+
+  (defun kc-evil-scroll-left()
+    (interactive)
+    (evil-scroll-column-left 6)
+    (backward-char 6)
+    )
+
+  :general
+  (:states '(normal visual)
+	       :no-autoload t
+	       "SPC ;" #'evil-avy-goto-line
+	       )
+  (:states '(normal visual)
+	       :no-autoload t
+	       :keymaps 'evil-ex-completion-map
+	       "<escape>" #'abort-recursive-edit
+	       )
+
+  :config
+  (evil-mode 1)
+  (evil-set-undo-system 'undo-redo)
+
+  (evil-select-search-module 'evil-search-module 'evil-search)
+  (setq evil-search-wrap nil)
+
+
+  )
+#+end_src
+*** Evil collection
+#+begin_src emacs-lisp
+(use-package evil-collection
+  :after evil
+  :ensure t
+  :delight
+  (evil-collection-unimpaired-mode)
+
+  :config
+  (evil-collection-init)
+  )
+#+end_src
+*** Evil org
+#+begin_src emacs-lisp
+(use-package evil-org
+  :ensure t
+  :after org
+  :delight
+  :hook ((org-mode calendar-mode) . evil-org-mode)
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-set-key-theme '(textobjects insert navigation additional shift todo heading))
+  (setq evil-want-C-i-jump nil)         ;to make tab work in terminal
+  (evil-define-minor-mode-key 'normal 'evil-org-mode "gj" #'org-next-visible-heading)
+  (evil-define-minor-mode-key 'normal 'evil-org-mode "gk" #'org-previous-visible-heading)
+  (evil-define-minor-mode-key 'normal 'evil-org-mode "O" (lambda () (interactive) (progn (call-interactively #'org-ctrl-c-ret) (evil-insert-state))))
+  (evil-define-minor-mode-key 'normal 'evil-org-mode (kbd "RET") #'kc-org-dwim-at-point)
+  )
+#+end_src
+*** Evil surround
+#+begin_src emacs-lisp
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
+#+end_src
+** Window management
+- See great article by [[https://github.com/daviwil/emacs-from-scratch/blob/master/show-notes/Emacs-Tips-DisplayBuffer-1.org][github.com - emacs from scratch/displaybuffer]]
+#+begin_src emacs-lisp
+(use-package window
+  :config
+  ;; Split window sensibly, only split side-by-side. See
+  ;; "split-window-preferred-function"
+  (setq split-width-threshold 0)
+  (setq split-height-threshold nil)
+
+  )
+#+end_src
+* Pulled packages
+** Ace window
+#+begin_src emacs-lisp
+(use-package ace-window
+  :ensure t
+
+  :commands (ace-delete-window)
+
+  :bind (:map evil-window-map
+         ("C-w" . ace-window))
+
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+
+  (custom-set-faces
+   '(aw-leading-char-face
+     ((t :foreground "white" :background "orangered"
+         :weight bold :height 2.5 :box (:line-width 10 :color "orangered")))))
+  )
+#+end_src
+** Aggressive indent
+#+begin_src emacs-lisp
+(use-package aggressive-indent
+  :ensure t
+  :config
+  (global-aggressive-indent-mode 1)
+  (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+  (add-to-list 'aggressive-indent-excluded-modes 'ess-r-mode)
+  )
+#+end_src
+** Anzu and evil-anzu
+
+This package highlights the number of current-match and total-matches for various search functions. ~evil-anzu~ is a very small package that ensure evil based search functions use ~anzu~.
+
+#+begin_src emacs-lisp
+(use-package anzu
+  :ensure t
+  :delight
+  :config
+  (global-anzu-mode 1)
+  )
+
+(use-package evil-anzu
+  :ensure t
+  :after (evil anzu)
+  )
+#+end_src
+** Auto capitalize
+
+Defined ~kc-add-to-list-multiple~ to not use ~add-to-list~ each time when adding every word. Using ~dolist~ iterates over the list and performs the function.
+
+#+begin_src emacs-lisp
+(use-package auto-capitalize
+  :delight
+  (auto-capitalize " ^") 
+  :config
+  (add-hook 'org-mode-hook 'turn-on-auto-capitalize-mode)
+
+  (defun kc-add-to-list-multiple (var things)
+    "Add multiple items to add-to-list at once, without repeating. This is a
+     macro, the first argument is the quoted variable that is a list, the second
+     argument is a quoted parenthetical list of things to add to the list, can
+     be double quoted for strings and such. See example of auto-capitalize-words
+     variable that has been set using this."
+    (cl-dolist (item things)
+      (add-to-list var item t)))
+
+  (kc-add-to-list-multiple 'auto-capitalize-words '("Krupal" 
+						                            "Humans" "Human" "Humanity"
+						                            "India" "Ireland" "Irish"
+						                            "Asia" "Universe" "Earth" "R"
+						                            "EUR" "USD"
+                                                    "NetApp" "Keystone"
+						                            ))
+
+  (modify-syntax-entry ?' ".   " text-mode-syntax-table) ;; to make apostrophe a punctuation
+
+  ;; Below function to make auto-capitalize work in src code blocks when
+  ;; necessary such as in latex blocks, add this as a file local hook to
+  ;; 'post-command-hook', to counter the global command note: add-hook for
+  ;; post-command-hook wasn't working, instead used setq-local post-command-hook
+  ;; 'kc-dwiw-auto-capitalize in screenplay_template.org and it seems to be
+  ;; working now
+  (defun kc-dwiw-auto-capitalize ()
+    (when (derived-mode-p 'org-mode)
+      (if (org-in-block-p '("src"))
+          (when auto-capitalize (auto-capitalize-mode 1))
+	    (unless auto-capitalize (auto-capitalize-mode 1))
+	    )))
+
+  )
+#+end_src
+** Avy
+#+begin_src elisp
+(use-package avy
+  :ensure t
+  :config
+  (setq avy-background t) 
+  )
+#+end_src
+** Bookmarks
+#+begin_src emacs-lisp
+(use-package bookmark
+  :defer t
+  :config
+  (setq bookmark-default-file "~/.emacs.d/bookmarks")
+  (setq bookmark-save-flag 0)
+  )
+#+end_src
+** Calc
+#+begin_src emacs-lisp
+(use-package calc
+  :defer t
+  :commands (calc)
+  :general
+  (:states '(normal visual)
+           "SPC C" #'calc
+           )
+  )
+#+end_src
+** Calendar 
+#+begin_src emacs-lisp
+(use-package calendar
+  :config
+  (setq calendar-week-start-day 1)
+  (add-to-list 'display-buffer-alist
+               '("\\*Calendar\\*"
+		 (display-buffer-at-bottom)
+		 ))
+  )
+#+end_src
+** Calfw - calendar framework
+#+begin_src emacs-lisp
+(use-package calfw
+  :ensure t
+  :defer t
+
+  :config
+  (custom-set-faces
+   '(cfw:face-grid ((t :foreground "#009EE1"))))
+
+  ;; For the calendar provided by `cfw`, make sure it also follows our 
+  ;; background color convention for non-file-visiting buffers.
+  (add-hook 'cfw:calendar-mode-hook 'kc-set-non-file-visiting-background)
+
+  )
+
+(use-package calfw-org
+  :ensure t
+  :commands cfw:open-org-calendar
+  :defer t)
+
+(use-package calfw-cal
+  :ensure t
+  :defer t)
+
+(use-package calfw-ical
+  :ensure t
+  :commands cfw:open-ical-calendar)
+#+end_src
+** Cape
+#+begin_src emacs-lisp
+(use-package cape
+  :ensure t
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  ;; :bind (("C-c p p" . completion-at-point) ;; capf
+  ;;        ("C-c p t" . complete-tag)        ;; etags
+  ;;        ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
+  ;;        ("C-c p h" . cape-history)
+  ;;        ("C-c p f" . cape-file)
+  ;;        ("C-c p k" . cape-keyword)
+  ;;        ("C-c p s" . cape-symbol)
+  ;;        ("C-c p a" . cape-abbrev)
+  ;;        ("C-c p l" . cape-line)
+  ;;        ("C-c p w" . cape-dict)
+  ;;        ("C-c p \\" . cape-tex)
+  ;;        ("C-c p _" . cape-tex)
+  ;;        ("C-c p ^" . cape-tex)
+  ;;        ("C-c p &" . cape-sgml)
+  ;;        ("C-c p r" . cape-rfc1345))
+  :init
+  ;; Add to the global default value of `completion-at-point-functions' which is
+  ;; used by `completion-at-point'.  The order of the functions matters, the
+  ;; first function returning a result wins.  Note that the list of buffer-local
+  ;; completion functions takes precedence over the global list.
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+)
+#+end_src
+** Comint mode
+#+begin_src emacs-lisp
+(use-package comint
+  :general
+  (:states '(normal visual)
+   :keymaps 'comint-mode-map
+   "SPC mC" #'comint-interrupt-subjob
+   "SPC mo" #'comint-clear-buffer
+   )
+  )
+#+end_src
+** Corfu
+#+begin_src emacs-lisp
+(use-package corfu
+  :ensure t
+  :bind
+  (:map corfu-map
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous))
+
+  ;; Optional customizations
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
+  ;; (corfu-separator ?\s)          ;; Orderless field separator
+  (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+  (corfu-quit-no-match t)      ;; Quit, when there is no match
+  ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+  (corfu-preselect 'prompt)      ;; Preselect the prompt
+  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+  ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+  (corfu-auto-prefix 2)
+
+  ;; Enable Corfu only for certain modes.
+  ;; :hook ((prog-mode . corfu-mode)
+  ;;        (shell-mode . corfu-mode)
+  ;;        (eshell-mode . corfu-mode))
+
+  ;; Recommended: Enable Corfu globally.
+  ;; This is recommended since Dabbrev can be used globally (M-/).
+  ;; See also `global-corfu-modes'.
+  :init
+  (global-corfu-mode)
+  (corfu-history-mode)
+  )
+#+end_src
+** Delight
+
+A package to rename or hide both major mode and minor mode names in the mode-line. A more flexible alternative to diminish. Has use-package integration. The names in the mode-line are also called 'lighters', hence the name delight.
+
+#+begin_src emacs-lisp
+(use-package delight
+  :ensure t
+  )
+#+end_src
+** Dired
+#+begin_src emacs-lisp
+(use-package dired
+  :general
+  (:states '(normal insert)
+	   :keymaps 'dired-mode-map
+	   "h" #'dired-up-directory
+	   "l" #'dired-find-file
+	   )
+
+  :config
+  (setq dired-use-ls-dired t)
+  (setq insert-directory-program "~/homebrew/bin/gls")
+  (setq dired-listing-switches "-ahl -v --group-directories-first -A -t") ;; -A hides the . and .. in directory listing
+  (setq dired-dwim-target t)
+  )
+#+end_src
+** Diredfl
+
+This package adds additional font-lock rules to provide a more colourful Dired buffer
+
+#+begin_src emacs-lisp
+(use-package diredfl
+  :ensure t
+  :defer t
+  :hook (dired-mode . diredfl-mode))
+#+end_src
+
+** Ediff
+#+begin_src emacs-lisp
+(use-package ediff
+  :defer t
+  :commands (ediff ediff-buffers ediff-files)
+  :config
+
+  (setq ediff-split-window-function 'split-window-horizontally)
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+
+  )
+#+end_src
+** Garbage collection magic hack
+#+begin_src emacs-lisp
+(use-package gcmh
+  :ensure t
+  :delight
+
+  :config
+  (gcmh-mode 1)
+  )
+#+end_src
+** Git-gutter
+
+This package shows git diff, which is new lines, modified lines etc., in the fringe. Both the packages are needed, the fringe package is dependent on the gutter package and it won't work in terminal.
+
+#+begin_src emacs-lisp
+(use-package git-gutter
+  :ensure t
+  :delight
+  :config
+  (global-git-gutter-mode 1)
+  )
+
+(use-package git-gutter-fringe
+  :ensure t
+  :after git-gutter
+  :config
+  (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
+  (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
+  (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom))
+#+end_src
+
+** Good scroll
+#+begin_src emacs-lisp
+(if (eq system-type 'darwin)
+    (use-package good-scroll
+      :ensure t
+      :if window-system
+      :commands
+      (kc-good-scroll-up-half-screen
+       kc-good-scroll-down-half-screen
+       good-scroll-down
+       good-scroll-up
+       )
+
+      :preface
+      (defun kc-good-scroll-up-half-screen ()
+        (interactive)
+        (good-scroll-move (/ (good-scroll--window-usable-height) 2)))
+
+      (defun kc-good-scroll-down-half-screen ()
+        (interactive)
+        (good-scroll-move (- (/ (good-scroll--window-usable-height) 2))))
+
+      :config
+      (good-scroll-mode 1)
+      (setq scroll-conservatively 1000)
+      )
+
+  (use-package evil-commands
+    :bind
+    (("C-S-j" . kc-evil-scroll-down-half-screen)
+     ("C-S-k" . kc-evil-scroll-up-half-screen)
+     ([remap evil-scroll-up] . kc-evil-scroll-up)
+     ([remap evil-scroll-down] . kc-evil-scroll-down)
+     )
+    :config
+    (defun kc-evil-scroll-up ()
+      (interactive)
+      (evil-scroll-line-up 4))
+
+    (defun kc-evil-scroll-down ()
+      (interactive)
+      (evil-scroll-line-down 4))
+
+    (defun kc-evil-scroll-up-half-screen ()
+      (interactive)
+      (evil-scroll-line-up (/ (window-height) 2)))
+
+    (defun kc-evil-scroll-down-half-screen ()
+      (interactive)
+      (evil-scroll-line-down (/ (window-height) 2)))
+    ))
+#+end_src
+** Help
+#+begin_src emacs-lisp
+(use-package help
+  :config
+  (add-to-list 'display-buffer-alist
+               '("\\*Messages\\*"
+		 (display-buffer-at-bottom)
+		 ))
+  )
+#+end_src
+** Helpful
+
+The package the replaces emacs built-in help buffer and instead gives better information such as in describe variable buffer, shows links to other variables and show keybindings etc.
+
+#+begin_src emacs-lisp
+(use-package helpful
+  :ensure t
+  :general
+  ([remap describe-function]  #'helpful-callable)
+  ([remap describe-command]  #'helpful-command)
+  ([remap describe-variable]  #'helpful-variable)
+  ([remap describe-key]  #'helpful-key)
+  ([remap describe-symbol]  #'helpful-symbol)
+  (:states '(normal)
+	   :keymaps 'helpful-mode-map
+	   "<escape>" #'quit-window)
+
+  :config
+  (add-to-list 'display-buffer-alist
+               '("\\*helpful.*"
+                 (display-buffer-at-bottom)
+                 (window-height . 0.4)
+                 (window-parameters . ((no-delete-other-windows . t)
+                                       (dedicated . t)))))
+
+  )
+#+end_src
+** Hide mode line
+#+begin_src emacs-lisp
+(use-package hide-mode-line
+  :ensure t)
+#+end_src
+** Highlight-quoted
+#+begin_src emacs-lisp
+(use-package highlight-quoted
+  :ensure t
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'highlight-quoted-mode)
+
+  )
+#+end_src
+** Ibuffer 
+#+begin_src emacs-lisp
+(use-package ibuffer
+  :config
+
+  (setq ibuffer-saved-filter-groups
+	'(("Default"
+           ;; I create a group call Dired, which contains all buffer in dired-mode
+           ("Dired" (mode . dired-mode))
+	   ("Files" (visiting-file . t)) ;; file visiting buffers
+           ("Temporary" (name . "\*.*\*"))
+           )))
+
+
+  (add-hook 'ibuffer-mode-hook
+            (lambda ()
+              (ibuffer-switch-to-saved-filter-groups "Default")))
+  )
+#+end_src
+** Imenu list
+#+begin_src emacs-lisp
+(use-package imenu-list
+  :ensure t
+
+  :bind ("C-c i" . imenu-list-smart-toggle)
+
+  :config
+  ;; (set-display-table-slot standard-display-table 'truncation ?\ )
+  (setq imenu-list-idle-update-delay 0.5)
+  (setq org-imenu-depth 3)
+
+  (setq imenu-list-position 'left) 
+  (setq imenu-list-size 0.15)
+
+  (defun kc-imenu-list-recenter ()
+    "Move the imenu-list buffer's point to the current position's entry."
+    (when (get-buffer-window (imenu-list-get-buffer-create))
+      (with-selected-window (get-buffer-window (imenu-list-get-buffer-create))
+        (recenter-top-bottom)
+        )))
+
+  (add-hook 'imenu-list-update-hook #'kc-imenu-list-recenter)
+
+  (defun kc-imenu-list-mode-face ()
+    (face-remap-add-relative 'hl-line '(:box (:line-width (2 . 2) :color "brown" :style nil))))
+
+  (add-hook 'imenu-list-major-mode-hook 'kc-imenu-list-mode-face)
+  (add-hook 'imenu-list-major-mode-hook (lambda () (text-scale-decrease 1)))
+  )
+#+end_src
+** Ledger mode
+*** Main
+#+begin_src emacs-lisp
+(use-package ledger-mode
+  :ensure t
+  :defer t
+  :commands (ledger-mode)
+  :preface
+  (defun kc-ledger-add-transaction (oldfun &rest args)
+    (unwind-protect (let ((good-scroll-mode-was-active good-scroll-mode))
+                      (when good-scroll-mode
+                        (good-scroll-mode -1))
+                      (apply oldfun args)
+                      (when good-scroll-mode-was-active
+                        (good-scroll-mode 1)))
+      (good-scroll-mode 1)))
+
+  :general
+  (:states '(normal visual)
+	   :keymaps 'ledger-mode-map
+	   "SPC m;" #'ledger-post-align-dwim
+	   "SPC ma" #'ledger-add-transaction	   
+	   "SPC mf" #'ledger-occur
+	   "SPC ml" #'(lambda () (interactive) (move-to-column 78 t))
+	   "SPC mr" #'ledger-report
+	   "SPC ms" #'ledger-sort-region
+	   "SPC mt" #'ledger-toggle-current
+	   )
+  (:states '(normal visual)
+	   :keymaps 'ledger-report-mode-map
+	   "e" #'ledger-report-edit-report
+	   "E" #'ledger-report-edit-reports
+	   )
+
+  :config
+
+  (add-to-list 'display-buffer-alist
+               '("\\*Ledger Report\\*"
+		 (display-buffer-at-bottom)
+		 (window-height . 0.40)
+		 ))
+
+  (setq ledger-post-amount-alignment-column 80)
+
+  (advice-add 'ledger-add-transaction :around 'kc-ledger-add-transaction)
+  (add-hook 'ledger-mode-hook 'turn-on-auto-capitalize-mode)
+  (add-hook 'ledger-mode-hook 'ledger-flymake-enable)
+
+  )
+#+end_src
+** link hint
+#+begin_src emacs-lisp
+(use-package link-hint
+  :ensure t)
+#+end_src
+** Magit
+#+begin_src emacs-lisp
+(use-package magit
+  :ensure t
+  :delight
+  (magit-wip-mode)
+  :general
+  (:states '(normal visual)
+	       :no-autoload t
+	       :keymaps 'magit-mode-map
+	       "SPC ;" #'evil-avy-goto-line
+           "Z" #'magit-stash
+           "zo" #'magit-section-show
+           "zO" #'magit-section-show-children
+	       )
+
+  :config
+  (setq magit-wip-mode t)
+  (setq magit-diff-refine-hunk 'all)
+
+
+  (add-hook 'magit-diff-mode-hook (lambda () (setq truncate-lines nil)))
+  (add-hook 'magit-status-mode-hook (lambda () (setq truncate-lines nil)))
+  (add-hook 'magit-status-sections-hook #'magit-insert-modules 90)
+  (add-to-list 'display-buffer-alist
+               '("^magit: .*" (display-buffer-same-window)))
+
+
+  (evil-set-initial-state 'git-commit-mode 'insert)
+
+  )
+
+
+(use-package with-editor
+  :after magit
+
+  :general
+  (:states 'normal
+           :keymaps 'with-editor-mode-map
+           "SPC m'" #'with-editor-finish
+           "SPC mk" #'with-editor-cancel)
+  )
+#+end_src
+** Markdown mode
+#+begin_src emacs-lisp
+(use-package markdown-mode
+  :defer t
+  :general
+  (:states '(normal visual)
+	   :keymaps 'markdown-mode-map
+	   "gj" #'markdown-next-visible-heading
+	   "gJ" #'markdown-forward-same-level
+	   "gk" #'markdown-previous-visible-heading
+	   "gK" #'markdown-backward-same-level
+	   "zO" #'outline-show-subtree
+	   "SPC mn" #'markdown-narrow-to-subtree
+	   "SPC mw" #'widen
+	   ) 
+
+  :preface
+  (defun kc-markdown-cycle (&optional arg)
+    "KC has commented out the section where it checks for last command
+and opens the entire subtree. This eliminates the middle state when cycling.
+
+Visibility cycling for Markdown mode.
+This function is called with a `\\[universal-argument]' or if ARG is t, perform
+global visibility cycling.  If the point is at an atx-style header, cycle
+visibility of the corresponding subtree.  Otherwise, indent the current line
+ or insert a tab, as appropriate, by calling `indent-for-tab-command'."
+    (interactive "P")
+    (cond
+
+     ;; Global cycling
+     (arg
+      (cond
+       ;; Move from overview to contents
+       ((and (eq last-command this-command)
+             (eq markdown-cycle-global-status 2))
+        (outline-hide-sublevels 1)
+        (message "CONTENTS")
+        (setq markdown-cycle-global-status 3)
+        (markdown-outline-fix-visibility))
+       ;; Move from contents to all
+       ((and (eq last-command this-command)
+             (eq markdown-cycle-global-status 3))
+        (outline-show-all)
+        (message "SHOW ALL")
+        (setq markdown-cycle-global-status 1))
+       ;; Defaults to overview
+       (t
+        (outline-hide-body)
+        (message "OVERVIEW")
+        (setq markdown-cycle-global-status 2)
+        (markdown-outline-fix-visibility))))
+
+     ;; At a heading: rotate between three different views
+     ((save-excursion (beginning-of-line 1) (markdown-on-heading-p))
+      (markdown-back-to-heading)
+      (let ((goal-column 0) eoh eol eos)
+        ;; Determine boundaries
+        (save-excursion
+          (markdown-back-to-heading)
+          (save-excursion
+            (beginning-of-line 2)
+            (while (and (not (eobp)) ;; this is like `next-line'
+                        (get-char-property (1- (point)) 'invisible))
+              (beginning-of-line 2)) (setq eol (point)))
+          (markdown-end-of-heading)   (setq eoh (point))
+          (markdown-end-of-subtree t)
+          (skip-chars-forward " \t\n")
+          (beginning-of-line 1) ; in case this is an item
+          (setq eos (1- (point))))
+        ;; Find out what to do next and set `this-command'
+        (cond
+         ;; Nothing is hidden behind this heading
+         ((= eos eoh)
+          (message "EMPTY ENTRY")
+          (setq markdown-cycle-subtree-status nil))
+         ;; Entire subtree is hidden in one line: open it
+         ((>= eol eos)
+          (markdown-show-entry)
+          (outline-show-children)
+          (message "CHILDREN")
+          (setq markdown-cycle-subtree-status 'children))
+         ;; We just showed the children, now show everything.
+         ;; ((and (eq last-command this-command)
+         ;;       (eq markdown-cycle-subtree-status 'children))
+         ;;  (outline-show-subtree)
+         ;;  (message "SUBTREE")
+         ;;  (setq markdown-cycle-subtree-status 'subtree))
+         ;; Default action: hide the subtree.
+         (t
+          (outline-hide-subtree)
+          (message "FOLDED")
+          (setq markdown-cycle-subtree-status 'folded)))))
+
+     ;; In a table, move forward by one cell
+     ((markdown-table-at-point-p)
+      (call-interactively #'markdown-table-forward-cell))
+
+     ;; Otherwise, indent as appropriate
+     (t
+      (indent-for-tab-command))))
+
+  :config
+  (add-hook 'markdown-mode-hook #'writeroom-mode)
+  (add-hook 'markdown-mode-hook #'kc-header t)
+  (add-hook 'markdown-mode-hook (lambda ()
+                                  (if (file-remote-p default-directory)
+                                      (real-auto-save-mode 0)
+                                    (real-auto-save-mode 1)
+                                    )))
+  (add-hook 'markdown-mode-hook 'turn-on-auto-capitalize-mode)
+  (add-hook 'markdown-mode-hook #'visual-line-mode)
+  (advice-add 'markdown-cycle :override #'kc-markdown-cycle)
+
+  )
+#+end_src
+** Minibuffer
+#+begin_src emacs-lisp
+(use-package minibuffer
+  :general
+  (:states '(normal visual)
+   :keymaps 'minibuffer-local-map
+   "<escape>" #'abort-recursive-edit
+   )
+  )
+#+end_src
+** Org
+*** Main 
+#+begin_src emacs-lisp
+(use-package org
+  :defer t
+  :delight
+  (org-src-mode)
+  
+  <<orgkeys>>
+
+  :preface
+  <<orgc>>
+  :config
+  <<org>>
+  )
+#+end_src
+*** Additional config
+:PROPERTIES:
+:header-args: :tangle no :noweb-ref org
+:END:
+**** General
+#+begin_src emacs-lisp
+(setq org-hide-leading-stars t
+      org-pretty-entities nil
+      org-capture-bookmark nil
+      org-bookmark-names-plist nil
+      org-cycle-include-plain-lists 'integrate
+      org-archive-save-context-info '(time file olpath category todo ltags itags)
+      org-startup-indented t
+      org-src-preserve-indentation t
+      org-directory "~/Documents/"
+      org-ellipsis " ▼"
+      org-enforce-todo-dependencies t
+      )
+
+(setq org-src-window-setup 'current-window)
+
+(setq org-preview-latex-image-directory "~/.emacs.d/cache/")
+
+;; Default applications that org opens when following org links based
+;; on files or type of links
+(setq org-file-apps '((auto-mode . emacs)
+					  (directory . emacs)))
+
+(setq org-link-frame-setup
+      '((vm . vm-visit-folder-other-frame)
+        (vm-imap . vm-visit-imap-folder-other-frame)
+        (gnus . org-gnus-no-new-news)
+        (file . find-file)
+        (wl . wl-other-frame))
+      )
+
+
+(setq org-element-use-cache nil)
+(setq org-element-cache-persistent nil)
+
+(setq org-confirm-babel-evaluate t)
+
+(org-crypt-use-before-save-magic)
+(setq org-tags-exclude-from-inheritance '("crypt"))
+(setq org-crypt-key "emacs@gnu.org")
+
+(setq org-emphasis-alist
+      '(("*" (bold :foreground "brown" :background "orange"))
+        ("/" (italic :foreground "gold"))
+        ("_" (bold :foreground "red"))
+        ("=" org-verbatim verbatim)
+        ("~" org-code verbatim)
+        ("+" (italic :foreground "gray20"))
+        ))
+
+(setq org-blank-before-new-entry nil)
+(setq org-insert-heading-respect-content t)
+(setq org-auto-align-tags nil)
+(setq org-tags-column 0) ;; needed as evil-org-delete tries to align no matter auto-align value
+(setq org-hide-emphasis-markers t)
+(setq org-id-locations-file "~/.emacs.d/.orgids")
+(setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
+;; The below agenda text search will also help org-id-extra-files and this is to
+;; add files to use the search functionality
+(setq org-agenda-text-search-extra-files (append (directory-files-recursively "~/Documents/" "\.org$"))) 
+(setq org-list-allow-alphabetical t)
+
+
+(setq org-list-demote-modify-bullet
+      '(("+" . "-")
+        ("-" . "+")
+        ("1." . "a.")
+        ("a." . "1.")
+        ("1)" . "a)")
+        ("a)" . "1)")
+        ("A)" . "1)")
+        ))
+
+(kc-add-to-list-multiple 'org-modules '(org-habit org-checklist org-tempo org-id org-crypt org-inlinetask))
+
+(setq org-todo-keywords '((sequence "TODO(t!)" "READY(r!)" "NEXT(n!)" "WORKING(w!)" "WAIT(W@/!)" "SOMEDAY(s!)" "|" "DONE(d!)" "CANCEL(c@/!)"))
+      org-todo-keyword-faces
+      '(("NEXT" :foreground "#00FFBC" :weight bold :underline t)
+        ("WAIT" :foreground "#FF2E5F" :weight bold :underline t)
+        ("CANCEL" :foreground "#CECECE" :weight bold :underline t)
+        ("TODO" :foreground "#f0c613" :weight bold :underline t)
+        ("WORKING" :foreground "purple" :weight bold :underline t)
+        ("SOMEDAY" :foreground "#89C0FF" :weight bold :underline t)
+        ("READY" :foreground "chocolate" :weight bold :underline t)
+        ("DONE" :foreground "#07CA00" :weight bold :underline t))
+      holiday-islamic-holidays nil
+      org-capture-templates
+      '(("t" "Task Entry" entry
+         (file+headline "~/Documents/test.org" "Capture")
+         "** TODO %?\n:LOGBOOK:\n- Added:%U\n:END:"
+         :kill-buffer t)
+        ("n" "Note" entry
+         (file+headline "~/Documents/test.org" "Capture")
+         "** %?\n:LOGBOOK:\n- Added:%U\n:END:"
+         :kill-buffer t)
+        ("d" "Date tree" entry
+         (file+olp+datetree "~/Documents/test.org")
+         "* %?\n:LOGBOOK:\n- Added:%U\n:END:"
+         :kill-buffer t)
+        )
+      org-cycle-include-plain-lists 'integrate
+      org-archive-save-context-info '(time file olpath category todo ltags itags)
+      org-columns-default-format "%PRIORITY(Pr) %ITEM(Task) %TODO %Effort{:} %CLOCKSUM(Clocked)"
+      org-clock-clocktable-default-properties '(:maxlevel 5 :emphasize t :indent t)
+      org-log-done 'note
+      )
+#+end_src
+**** Org link parameters
+#+begin_src emacs-lisp
+;; To highlight broken links in org buffers
+(org-link-set-parameters
+ "file"
+ :face (lambda (path) (if (file-exists-p path) 'org-link 'compilation-error)))
+
+(defface kc-org-link-url
+  '((t :foreground "VioletRed"
+       :underline t
+       ))
+  "KC Custom face for url links in org"
+  :group 'org-faces
+  )
+
+(org-link-set-parameters "https"
+                         :face 'kc-org-link-url
+                         )
+(org-link-set-parameters "http"
+                         :face 'kc-org-link-url
+                         )
+
+
+#+end_src
+**** Org src org-structure-template-alist (works after adding ~org-tempo~ to org-modules):
+#+begin_src emacs-lisp
+(add-to-list 'org-structure-template-alist '("p" . "src emacs-lisp"))
+(add-to-list 'org-structure-template-alist '("x" . "src latex"))
+(add-to-list 'org-structure-template-alist '("cl" . "src C"))
+(add-to-list 'org-structure-template-alist '("f" . "src ledger"))
+(add-to-list 'org-structure-template-alist '("wh" . "src html"))
+(add-to-list 'org-structure-template-alist '("wc" . "src css"))
+(add-to-list 'org-structure-template-alist '("wj" . "src js"))
+(add-to-list 'org-structure-template-alist '("r" . "src R"))
+(add-to-list 'org-structure-template-alist '("S" . "src sql"))
+(add-to-list 'org-structure-template-alist '("P" . "src python"))
+#+end_src
+**** Babel languages
+#+begin_src emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages '(
+			     (emacs-lisp . t)
+			     (ledger . t)
+			     ))
+
+#+end_src
+**** Hooks
+#+begin_src emacs-lisp
+(add-hook 'org-mode-hook #'kc-header)
+(add-hook 'org-mode-hook #'visual-line-mode)
+(add-hook 'org-cycle-tab-first-hook #'kc-org-cycle-only-current-subtree-h)
+(add-hook 'org-mode-hook 'writeroom-mode)
+(add-hook 'org-capture-mode-hook 'evil-insert-state)  ;; evil-set-initial-state only works for major-modes
+(add-hook 'org-mode-hook (lambda () (eldoc-mode -1)))
+(add-hook 'org-mode-hook (lambda ()
+                           (if (file-remote-p default-directory)
+                               (real-auto-save-mode 0)
+                             (real-auto-save-mode 1)
+                             )))
+
+
+;; remove real auto save from capture buffer
+(defun kc-disable-real-auto-save-in-capture ()
+  "Remove capture's base buffer from real-auto-save's buffer list."
+  (let ((base-buf (buffer-base-buffer)))
+    (setq real-auto-save-buffers-list
+          (delq base-buf real-auto-save-buffers-list))))
+
+(add-hook 'org-capture-mode-hook 'kc-disable-real-auto-save-in-capture)
+
+(add-hook 'org-tab-first-hook 'kc-org-indent-maybe-h)
+#+end_src
+**** Display buffer modifications
+#+begin_src emacs-lisp
+(add-to-list 'display-buffer-alist
+             '("\\*Agenda Commands\\*"
+	       (display-buffer-at-bottom)
+	       ))
+
+(add-to-list 'display-buffer-alist
+             '("\\*Org Select\\*"
+	       (display-buffer-at-bottom)
+	       ))
+
+(add-to-list 'display-buffer-alist
+             '("^CAPTURE"
+	       (display-buffer-at-bottom)
+	       ))
+#+end_src
+*** Org keybindings
+:PROPERTIES:
+:header-args: :tangle no :noweb-ref orgkeys
+:END:
+#+begin_src emacs-lisp
+:general
+(:states '(normal visual)
+	 :keymaps 'org-mode-map
+	 "SPC ," #'kc-org-consult-goto-headings
+	 "SPC m'" #'kc-org-edit-special
+	 "SPC m," #'org-insert-structure-template
+	 "SPC mC" #'org-ctrl-c-ctrl-c
+	 "SPC mH" #'org-toggle-item
+	 "SPC mI" #'org-id-get-create
+	 "SPC mN" #'org-noter
+	 "SPC mR" #'kc-org-roam-insert
+	 "SPC mV" #'kc-org-download-yank
+	 "SPC ma" #'org-agenda
+	 "SPC mb" #'org-switchb
+	 "SPC md" #'org-decrypt-entry
+	 "SPC mh" #'org-toggle-heading
+	 "SPC mi" #'org-ctrl-c-ret
+	 "SPC mk" #'org-kill-note-or-show-branches
+	 "SPC mll" #'org-insert-link
+	 "SPC mls" #'org-store-link
+	 "SPC mlt" #'org-toggle-link-display
+	 "SPC mm SPC" #'kc-org-emphasize-remove
+	 "SPC mmb" #'kc-org-emphasize-bold
+	 "SPC mmc" #'kc-org-emphasize-code
+	 "SPC mmi" #'kc-org-emphasize-italic
+	 "SPC mmu" #'kc-org-emphasize-underline
+	 "SPC mmv" #'kc-org-emphasize-verbatim
+	 "SPC mn" #'org-narrow-to-subtree
+	 "SPC mo" #'org-open-at-point
+	 "SPC mp" #'org-set-property
+	 "SPC mrc" #'org-roam-capture
+	 "SPC mrdC" #'org-roam-dailies-capture-date
+	 "SPC mrdn" #'org-roam-dailies-goto-next-note
+	 "SPC mrdp" #'org-roam-dailies-goto-previous-note
+	 "SPC mrdt" #'org-roam-dailies-goto-today
+	 "SPC mrf" (lambda () (interactive) (org-roam-dailies-goto-date nil "d"))
+	 "SPC mri" #'kc-org-roam-insert
+	 "SPC msA" #'org-archive-to-archive-sibling
+	 "SPC msI" #'kc-org-insert-subheading
+	 "SPC msa" #'org-archive-subtree
+	 "SPC mv" #'org-cycle-set-visibility-according-to-property
+	 "SPC mw" #'widen
+	 "gJ" #'org-forward-element
+	 "gK" #'org-backward-element
+	 "zK" #'org-kill-note-or-show-branches
+	 )
+(:states '(normal visual)
+ :definer 'minor-mode
+ :keymaps 'org-src-mode
+ "SPC m'" 'org-edit-src-exit
+ "SPC mk" 'org-edit-src-abort
+ "SPC ms" 'org-edit-src-save
+ )
+(:states '(normal visual)
+ :definer 'minor-mode
+ :keymaps 'org-capture-mode
+ "SPC mk" 'org-capture-kill
+ "SPC m'" 'org-capture-finalize
+ )
+#+end_src
+*** Custom code
+:PROPERTIES:
+:header-args: :tangle no :noweb-ref orgc
+:END:
+**** Tab cycle only current subtree
+#+begin_src emacs-lisp
+(defun kc-org-cycle-only-current-subtree-h (&optional arg)
+  "Via Doom emacs. Toggle the local fold at the point, and no deeper.
+`org-cycle's standard behavior is to cycle between three levels: collapsed,
+subtree and whole document. This is slow, especially in larger org buffer. Most
+of the time I just want to peek into the current subtree -- at most, expand
+,*only* the current subtree.
+
+All my (performant) foldings needs are met between this and `org-show-subtree'
+(on zO for evil users), and `org-cycle' on shift-TAB if I need it."
+  (interactive "P")
+  (unless (or (eq this-command 'org-shifttab)
+              (and (bound-and-true-p org-cdlatex-mode)
+                   (or (org-inside-LaTeX-fragment-p)
+                       (org-inside-latex-macro-p))))
+    (save-excursion
+      (org-beginning-of-line)
+      (let (invisible-p)
+        (when (and (org-at-heading-p)
+                   (or org-cycle-open-archived-trees
+                       (not (member org-archive-tag (org-get-tags))))
+                   (or (not arg)
+                       (setq invisible-p (outline-invisible-p (line-end-position)))))
+          (unless invisible-p
+            (setq org-cycle-subtree-status 'subtree))
+          (org-cycle-internal-local)
+          t)))))
+#+end_src
+**** Consult org goto headings
+#+begin_src emacs-lisp
+(defun kc-org-consult-goto-headings (arg)
+  "KC org goto heading. Without universal arg go to heading in current buffer.
+With 1 universal arg - go to heading in all open files.
+With 2 universal args - go to heading in all org files in the directory of the current buffer.
+With 3 universal args - go to heading in all org files recursively in the directory of the current buffer."
+  (interactive "P")
+  (cond
+   ((equal arg nil) (consult-org-heading))
+   ((equal arg '(4)) (let ((org-agenda-files (kc-org-refile-open-buffers)))
+                       (progn
+                         (call-interactively #'consult-org-agenda)
+                         )
+                       ))
+   ((equal arg '(16)) (let ((org-agenda-files (directory-files (expand-file-name "./") t "\\.org$\\|\\.org.gpg$")))
+                        (progn
+                          (call-interactively #'consult-org-agenda)
+                          )
+                        ))
+   ((equal arg '(64)) (let ((org-agenda-files (directory-files-recursively (expand-file-name "./") "\\.org$\\|\\.org.gpg$")))
+                        (progn
+                          (call-interactively #'consult-org-agenda)
+                          )
+                        ))
+   )
+  )
+#+end_src
+**** Org edit src blocks special with args
+- Combine universal args to open the window below or swallow parent window
+- To see example implementation of universal argument see [[https://www.gnu.org/software/emacs/manual/html_node/eintr/Optional-Arguments.html][gnu.org optional arguments]]
+#+begin_src emacs-lisp
+(defun kc-org-edit-special(arg)
+  (interactive "P")
+  (cond
+   ((equal arg nil) (org-edit-special))
+   ((equal arg '(4)) (progn
+                       (let ((org-src-window-setup 'split-window-below))
+                         (org-edit-special))
+                       ))
+   ((equal arg '(16)) (progn
+                        (let ((org-src-window-setup 'split-window-right))
+                          (org-edit-special))
+                        ))
+   ((equal arg '(64)) (progn
+                        (let ((org-src-window-setup 'current-window))
+                          (org-edit-special))
+                        ))
+   )
+  )
+#+end_src
+**** Org tangle when in edit special buffer
+#+begin_src emacs-lisp
+(defun kc-org-babel-tangle-special ()
+  (interactive)
+  (let ((file org-src-source-file-name))
+    (if (equal major-mode 'org-mode)
+        (org-babel-tangle)
+      (progn
+        (org-edit-src-save)
+        (org-babel-tangle-file file)
+        )
+      )
+    )
+  )
+#+end_src
+**** Org show lunar phases
+- From worg/org-hacks. Originally added to show in agenda
+#+begin_src emacs-lisp
+(defun kc-org-lunar-phases ()
+  "Show lunar phase in Agenda buffer."
+  (require 'lunar)
+  (let* ((phase-list (lunar-phase-list (nth 0 date) (nth 2 date)))
+         (phase (cl-find-if (lambda (phase) (equal (car phase) date))
+                            phase-list)))
+    (when phase
+      (setq ret (concat (lunar-phase-name (nth 2 phase)) " "
+                        (substring (nth 1 phase) 0 5))))))
+(setq lunar-phase-names
+      '("○ New Moon" ; Unicode symbol: 🌑 Use full circle as fallback
+        "☽ First Quarter Moon"
+        "● Full Moon" ; Unicode symbol: 🌕 Use empty circle as fallback
+        "☾ Last Quarter Moon"))
+#+end_src
+**** Org emphasize functions
+#+begin_src emacs-lisp
+(defun kc-org-emphasize-verbatim ()
+  (interactive)
+  (org-emphasize ?=)
+  )
+
+(defun kc-org-emphasize-code ()
+  (interactive)
+  (org-emphasize ?~)
+  )
+
+(defun kc-org-emphasize-italic ()
+  (interactive)
+  (org-emphasize ?/)
+  )
+
+(defun kc-org-emphasize-underline ()
+  (interactive)
+  (org-emphasize ?_)
+  )
+
+(defun kc-org-emphasize-bold ()
+  (interactive)
+  (org-emphasize ?*)
+  )
+
+(defun kc-org-emphasize-remove ()
+  (interactive)
+  (org-emphasize ? )
+  )
+#+end_src
+**** Org toggle inline images
+
+Picked from Doom Emacs config, it toggles image only at point when used with 'dwim' function, and not the entire buffer.
+
+#+begin_src emacs-lisp
+(defun kc-org-toggle-inline-images-in-subtree (&optional beg end refresh)
+  "Refresh inline image previews in the current heading/tree."
+  (let* ((beg (or beg
+                  (if (org-before-first-heading-p)
+                      (save-excursion (point-min))
+                    (save-excursion (org-back-to-heading) (point)))))
+         (end (or end
+                  (if (org-before-first-heading-p)
+                      (save-excursion (org-next-visible-heading 1) (point))
+                    (save-excursion (org-end-of-subtree) (point)))))
+         (overlays (cl-remove-if-not (lambda (ov) (overlay-get ov 'org-image-overlay))
+                                     (ignore-errors (overlays-in beg end)))))
+    (dolist (ov overlays nil)
+      (delete-overlay ov)
+      (setq org-inline-image-overlays (delete ov org-inline-image-overlays)))
+    (when (or refresh (not overlays))
+      (org-display-inline-images t t beg end)
+      t)))
+#+end_src
+**** Org dwim
+
+Slightly modified function from Doom Emacs.
+
+#+begin_src emacs-lisp
+(defun kc-org-dwim-at-point (&optional arg)
+  "Do-what-I-mean at point.
+
+If on a:
+- checkbox list item or todo heading: toggle it.
+- citation: follow it
+- headline: cycle ARCHIVE subtrees, toggle latex fragments and inline images in
+  subtree; update statistics cookies/checkboxes and ToCs.
+- clock: update its time.
+- footnote reference: jump to the footnote's definition
+- footnote definition: jump to the first reference of this footnote
+- timestamp: open an agenda view for the time-stamp date/range at point.
+- table-row or a TBLFM: recalculate the table's formulas
+- table-cell: clear it and go into insert mode. If this is a formula cell,
+  recaluclate it instead.
+- babel-call: execute the source block
+- statistics-cookie: update it.
+- src block: execute it
+- latex fragment: toggle it.
+- link: follow it
+- otherwise, refresh all inline images in current tree."
+  (interactive "P")
+  (if (button-at (point))
+      (call-interactively #'push-button)
+    (let* ((context (org-element-context))
+           (type (org-element-type context)))
+      ;; skip over unimportant contexts
+      (while (and context (memq type '(verbatim code bold italic underline strike-through subscript superscript)))
+        (setq context (org-element-property :parent context)
+              type (org-element-type context)))
+      (pcase type
+        ((or `citation `citation-reference)
+         (org-cite-follow context arg))
+
+        (`headline
+         (cond ((memq (bound-and-true-p org-goto-map)
+                      (current-active-maps))
+                (org-goto-ret))
+               ((and (fboundp 'toc-org-insert-toc)
+                     (member "TOC" (org-get-tags)))
+                (toc-org-insert-toc)
+                (message "Updating table of contents"))
+               ((string= "ARCHIVE" (car-safe (org-get-tags)))
+                (org-force-cycle-archived))
+               ((or (org-element-property :todo-type context)
+                    (org-element-property :scheduled context))
+                (org-todo
+                 (if (eq (org-element-property :todo-type context) 'done)
+                     'todo
+                   'done))))
+         ;; Update any metadata or inline previews in this subtree
+         (org-update-checkbox-count)
+         (org-update-parent-todo-statistics)
+         (when (and (fboundp 'toc-org-insert-toc)
+                    (member "TOC" (org-get-tags)))
+           (toc-org-insert-toc)
+           (message "Updating table of contents"))
+         (let* ((beg (if (org-before-first-heading-p)
+                         (line-beginning-position)
+                       (save-excursion (org-back-to-heading) (point))))
+		(end (if (org-before-first-heading-p)
+                         (line-end-position)
+                       (save-excursion (org-end-of-subtree) (point))))
+		(overlays (ignore-errors (overlays-in beg end)))
+		(latex-overlays
+                 (cl-find-if (lambda (o) (eq (overlay-get o 'org-overlay-type) 'org-latex-overlay))
+                             overlays))
+		(image-overlays
+                 (cl-find-if (lambda (o) (overlay-get o 'org-image-overlay))
+                             overlays)))
+           (kc-org-toggle-inline-images-in-subtree beg end)
+           (if (or image-overlays latex-overlays)
+               (org-clear-latex-preview beg end)
+             (org--latex-preview-region beg end))))
+
+	(`clock (org-clock-update-time-maybe))
+
+	(`footnote-reference
+	 (org-footnote-goto-definition (org-element-property :label context)))
+
+	(`footnote-definition
+	 (org-footnote-goto-previous-reference (org-element-property :label context)))
+
+	((or `planning `timestamp)
+	 (org-follow-timestamp-link))
+
+	((or `table `table-row)
+	 (if (org-at-TBLFM-p)
+             (org-table-calc-current-TBLFM)
+           (ignore-errors
+             (save-excursion
+               (goto-char (org-element-property :contents-begin context))
+               (org-call-with-arg 'org-table-recalculate (or arg t))))))
+
+	(`table-cell
+	 (org-table-blank-field)
+	 (org-table-recalculate arg)
+	 (when (and (string-empty-p (string-trim (org-table-get-field)))
+                    (bound-and-true-p evil-local-mode))
+           (evil-change-state 'insert)))
+
+	(`babel-call
+	 (org-babel-lob-execute-maybe))
+
+	(`statistics-cookie
+	 (save-excursion (org-update-statistics-cookies arg)))
+
+	((or `src-block `inline-src-block)
+	 (org-babel-execute-src-block arg))
+
+	((or `latex-fragment `latex-environment)
+	 (org-latex-preview arg))
+
+	(`link
+	 (let* ((lineage (org-element-lineage context '(link) t))
+		(path (org-element-property :path lineage)))
+           (if (or (equal (org-element-property :type lineage) "img")
+                   (and path (image-type-from-file-name path)))
+               (kc-org-toggle-inline-images-in-subtree
+		(org-element-property :begin lineage)
+		(org-element-property :end lineage))
+             (org-open-at-point arg))))
+
+	(`paragraph
+	 (kc-org-toggle-inline-images-in-subtree))
+
+	((guard (org-element-property :checkbox (org-element-lineage context '(item) t)))
+	 (let ((match (and (org-at-item-checkbox-p) (match-string 1))))
+           (org-toggle-checkbox (if (equal match "[ ]") '(16)))))
+
+	(_
+	 (if (or (org-in-regexp org-ts-regexp-both nil t)
+		 (org-in-regexp org-tsr-regexp-both nil  t)
+		 (org-in-regexp org-link-any-re nil t))
+             (call-interactively #'org-open-at-point)
+           (kc-org-toggle-inline-images-in-subtree
+            (org-element-property :begin context)
+            (org-element-property :end context))))))))
+#+end_src
+**** Org tab indent maybe
+
+Taken from doom Emacs, tab behaviour in insert mode.
+
+#+begin_src emacs-lisp
+(defun kc-org-indent-maybe-h ()
+  "Indent the current item (header or item), if possible.
+Made for `org-tab-first-hook' in evil-mode."
+  (interactive)
+  (cond ((not (and (bound-and-true-p evil-local-mode)
+                   (evil-insert-state-p)))
+         nil)
+        ((and (bound-and-true-p org-cdlatex-mode)
+              (or (org-inside-LaTeX-fragment-p)
+                  (org-inside-latex-macro-p)))
+         nil)
+        ((org-at-item-p)
+         (if (eq this-command 'org-shifttab)
+             (org-outdent-item-tree)
+           (org-indent-item-tree))
+         t)
+        ((org-at-heading-p)
+         (ignore-errors
+           (if (eq this-command 'org-shifttab)
+               (org-promote)
+             (org-demote)))
+         t)
+        ((org-in-src-block-p t)
+         (save-window-excursion
+           (org-babel-do-in-edit-buffer
+            (call-interactively #'indent-for-tab-command)))
+         t)
+        ((and (save-excursion
+                (skip-chars-backward " \t")
+                (bolp))
+              (org-in-subtree-not-table-p))
+         (call-interactively #'tab-to-tab-stop)
+         t)
+        ;; (t (call-interactively #'indent-for-tab-command)) ;; kc added this, needs testing
+        ))
+#+end_src
+** Org agenda
+#+begin_src emacs-lisp
+(use-package org-agenda
+  :general
+  (:states '(normal visual)
+	   :keymaps 'org-agenda-mode-map
+	   "v" #'org-agenda-view-mode-dispatch
+	   "q" #'org-agenda-quit
+	   )
+
+  :preface
+  (defun kc-org-agenda-skip-repeating-todos ()
+    "KC function to exclude repeating tasks in kanban gtd agenda view."
+    (let* ((sched (org-entry-get (point) "SCHEDULED"))
+           (dead (org-entry-get (point) "DEADLINE")))
+      (if (or (and sched (string-match-p "\\+" sched))
+              (and dead (string-match-p "\\+" dead)))
+          (progn
+            (outline-next-heading)
+            (point))
+        nil)))
+
+  (defun kc-kanban-gtd()
+    "KC Custom Agenda"
+    (interactive)
+    (let ((org-agenda-finalize-hook nil))
+      (org-agenda nil "g")
+      (setq-local mouse-highlight nil)
+      (hl-line-mode -1)
+      ))
+
+  :config
+
+  (evil-set-initial-state 'org-agenda-mode 'normal)
+
+  (setq org-agenda-window-setup 'other-window
+        org-agenda-include-diary t
+	org-agenda-dim-blocked-tasks t
+        )
+
+  (setq org-agenda-start-on-weekday 1)
+
+  (setq org-agenda-time-grid
+	'((daily today)
+	  (600 700 800 900 1000 1100 1200 1300 1400 1500 1600 1700 1800 1900 2000 2100 2200 2300)
+	  "......"
+	  "----------------"))
+
+  (add-to-list 'display-buffer-alist
+               '("\\*Org Agenda\\*"
+                 (display-buffer-in-side-window)
+                 (side . right)
+                 (slot . 0)
+                 (window-width . 0.35)
+                 (window-parameters . ((no-delete-other-windows . t)))))
+
+  (setq org-agenda-clock-consistency-checks
+        '(:max-duration "10:00" :min-duration 0 :max-gap "0:01" :gap-ok-around
+			("4:00")
+			:default-face
+			((:background "gold")
+			 (:foreground "black"))
+			:overlap-face
+			((:background "blue")
+			 (:foreground "white"))
+			:gap-face
+			((:background "DarkRed")
+			 (:foreground "white"))
+			:no-end-time-face nil :long-face nil :short-face nil))
+
+  (org-clock-persistence-insinuate)
+
+  (setq org-clock-mode-line-total 'today)
+
+  (setq org-agenda-timegrid-use-ampm t)
+  (setq org-agenda-clockreport-parameter-plist '(:maxlevel 5 :emphasize t :indent t))
+
+  (add-to-list 'org-agenda-custom-commands
+               '("g" "KC workflow"
+                 (
+                  (todo "WORKING"
+                        (
+                         (org-agenda-prefix-format "%-6e ")
+                         (org-agenda-sorting-strategy '(priority-down timestamp-down))
+                         (org-agenda-overriding-header "\n🔨 Working on now:\n")))
+                  (todo "NEXT"
+                        (
+                         (org-agenda-prefix-format "%-6e ")
+                         (org-agenda-sorting-strategy '(priority-down timestamp-down))
+                         (org-agenda-overriding-header "\n👉 Next items:\n")))
+                  (todo "READY"
+                        (
+                         (org-agenda-prefix-format "%-6e ")
+                         (org-agenda-sorting-strategy '(priority-down timestamp-down))
+                         (org-agenda-overriding-header "\n⌛ Upcoming items:\n")))
+                  ;; In the below I'm skipping any repeating tasks which includes
+                  ;; habits, as these will always appear and instead are shown at
+                  ;; the end as part of the agenda.
+                  (todo "TODO"
+                        (
+                         (org-agenda-prefix-format "%-6e %s ")
+                         (org-agenda-skip-function 'kc-org-agenda-skip-repeating-todos)
+                         (org-agenda-sorting-strategy '(priority-down timestamp-down))
+                         (org-agenda-overriding-header "\n⏰ Pending items:\n")))
+                  (tags "CLOSED>=\"<today>\""
+                        (
+                         (org-agenda-prefix-format "%-6e ")
+                         (org-agenda-sorting-strategy '(priority-down timestamp-down))
+                         (org-agenda-overriding-header "\n✅ Completed today:\n")))
+                  ;; The below is added only to use the header as 'agenda' type
+                  ;; doesn't respect overriding header.
+                  (todo "NULL"
+                        (
+                         (org-agenda-overriding-header "\n\n\n--- Agenda includes Repeating items ---\n\n")))
+                  ;; The below shows schedule, including repeating tasks,
+                  ;; spanning from past to two days into the
+                  ;; future, note span 3 below.
+                  (agenda "" (
+                              (org-agenda-span 3)
+                              (org-agenda-sorting-strategy '(deadline-up scheduled-up))
+                              (org-agenda-use-time-grid nil)
+                              (org-agenda-skip-deadline-if-done t)
+                              (org-agenda-skip-scheduled-if-done t)
+                              (org-agenda-include-diary t)
+                              (org-agenda-compact-blocks t)
+                              ))
+                  )))
+  )
+#+end_src
+** Org capture
+#+begin_src emacs-lisp
+(use-package org-capture
+  :delight
+  )
+#+end_src
+** Org duration
+#+begin_src emacs-lisp
+(use-package org-duration
+  :config
+  (setq org-duration-format '(("d") ("h") ("min")))
+  )
+#+end_src
+** Org indent
+#+begin_src emacs-lisp
+(use-package org-indent
+  :delight
+  )
+#+end_src
+** Org ob-ledger
+#+begin_src emacs-lisp
+(use-package org-contrib
+  :ensure t
+  :after org
+  :defer t)
+#+end_src
+** org roam config
+*** Notes
+- Notes about =dir specific org roam=
+  + Need to add /.dir-locals.el/, use the command ~add-dir-local-variable~
+  + Make sure to have no 'mode' as it must act for both 'org-mode' and 'org-roam-mode'
+  + Sample dir local config
+    #+begin_example
+    ;;; Directory Local Variables
+    ;;; For more information see (info "(emacs) Directory Variables")
+
+    ((nil . ((eval . (setq org-roam-db-location
+                           (expand-file-name "./org-roam.db")))
+             (eval . (setq org-roam-directory
+                           (expand-file-name "./")))))
+     (org-mode . ((eval . (org-roam-setup))
+                  (org-roam-graph-executable . "/opt/homebrew/bin/dot")
+                  (org-link-frame-setup . ((vm . vm-visit-folder-other-frame)
+                                           (vm-imap . vm-visit-imap-folder-other-frame)
+                                           (gnus . org-gnus-no-new-news)
+                                           (file . find-file)
+                                           (wl . wl-other-frame))))))
+    #+end_example
+- Notes to /exclude a whole file/
+  + See - [[https://www.reddit.com/r/OrgRoam/comments/p1vj5j/how_to_exclude_a_whole_file/][reddit.com answer]]
+  + Use 'filetags' feature of org-mode
+  + And then use org-roam function to exclude that tag
+- To ensure node find does not ignore gitignore files
+  + See source for below function: [[https://org-roam.discourse.group/t/subdirectories-in-gitignore-are-not-picked-up-by-roam-db-sync/2628][org-roam.discourse.group]]
+*** Main org-roam
+#+begin_src emacs-lisp
+(use-package org-roam
+  :ensure t
+  :requires (transient)
+  :general
+  (:keymaps 'special-mode-map
+            "SPC" nil)
+
+  :init
+  (add-to-list 'display-buffer-alist
+               '("\\*org-roam\\*"
+                 (display-buffer-in-side-window)
+                 (side . right)
+                 (slot . 0)
+                 (window-width . 0.15)
+                 (window-parameters . ((no-delete-other-windows . t)))))
+
+  :preface
+
+  (defun kc-org-roam-file-node-filter (node)
+    "filter function to be used with org-roam-node-find,
+it'll only show file nodes"
+    (= (org-roam-node-level node) 0))
+
+  (defun kc-org-roam-file-node-find (&optional arg)
+    (interactive "P")
+    (org-roam-node-find nil nil #'kc-org-roam-file-node-filter)
+    )
+
+  (defun kc-add-rg-ignored-files-flag (&rest rest)
+    (pcase (cl-first rest)
+      (`(,executable ,dir)
+       (list (string-join (list executable "--no-ignore" "--hidden") " ") dir)))
+    )
+
+  :config
+  (setq org-roam-directory (file-truename (expand-file-name "~/Documents/")))
+  (setq org-roam-db-location (file-truename (expand-file-name "~/.emacs.d/cache/org-roam.db")))
+
+  (setq org-roam-db-node-include-function
+        (lambda ()
+          (not (member "roam_exclude" (org-get-tags)))))
+
+  ;; functions for node display template
+  (cl-defmethod org-roam-node-kc-type ((node org-roam-node))
+    "Return the TYPE of NODE."
+    (condition-case nil
+        (file-name-nondirectory
+         (directory-file-name
+          (file-name-directory
+           (file-relative-name (org-roam-node-file node) org-roam-directory))))
+      (error "")))
+
+  (cl-defmethod org-roam-node-kc-filetitle ((node org-roam-node))
+    "Return the value of \"#+title:\" (if any) from file that NODE resides in.
+  If there's no file-level title in the file, return empty string."
+    (or (if (= (org-roam-node-level node) 0)
+            (org-roam-node-title node)
+          (org-roam-get-keyword "TITLE" (org-roam-node-file node)))
+        ""))
+
+
+  (cl-defmethod org-roam-node-kc-hierarchy ((node org-roam-node))
+    "Return hierarchy for NODE, constructed of its file title, OLP and direct title.
+  If some elements are missing, they will be stripped out."
+    (let ((title     (org-roam-node-title node))
+          (olp       (org-roam-node-olp   node))
+          (level     (org-roam-node-level node))
+          (filetitle (org-roam-node-kc-filetitle node))
+          (separator (propertize " → " 'face 'shadow))
+          )
+      (cl-case level
+        ;; node is a top-level file
+        (0 filetitle)
+        ;; node is a level 1 heading
+        (1 (concat
+            ;; (propertize filetitle 'face '(shadow italic))
+            title))
+        ;; node is a heading with an arbitrary outline path
+        (t (concat
+            ;; (propertize filetitle 'face '(shadow italic))
+            (propertize (string-join olp separator) 'face '(all-the-icons-dmaroon italic))
+            separator title)))))
+
+  (setq org-roam-node-display-template
+        (concat
+         (propertize "${kc-type:25} " 'face 'font-lock-keyword-face)
+         (propertize " ${kc-filetitle:15}" 'face 'org-level-3)
+         (propertize " ${tags:15}" 'face 'org-tag)
+         (propertize " ${title:25}" 'face 'org-level-7)
+         " ${kc-hierarchy}"
+         ))
+
+  (setq org-roam-capture-templates
+        '(
+          ("d" "default" plain (function org-roam--capture-get-point)
+           "%?"
+           :file-name "%<%Y%m%d%H%M%S>-${slug}"
+           :head "#+title: ${title}\n"
+           :unnarrowed t)
+          )
+        )
+
+  (setq org-roam-list-files-commands '(rg fd fdfind find))
+
+  (advice-add 'org-roam--list-files-rg :filter-args #'kc-add-rg-ignored-files-flag)
+
+  (setq org-roam-mode-sections
+        (list #'org-roam-backlinks-section
+              #'org-roam-reflinks-section
+              ;; #'org-roam-unlinked-references-section ;; computationally intensive
+              ))
+
+  (org-roam-db-autosync-mode)
+
+  (add-hook 'org-roam-mode-hook #'turn-on-visual-line-mode)
+  (add-hook 'org-roam-mode-hook (lambda()(progn(text-scale-adjust 0)(text-scale-decrease 1))))
+
+  )
+#+end_src
+*** Org-roam-dailies
+#+begin_src emacs-lisp
+(use-package org-roam-dailies
+
+  :config
+  (setq org-roam-dailies-capture-templates
+        '(("d" "default" entry "* %?\n:LOGBOOK:\n- Added:%U\n:END:" :target
+           (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n:PREAMBLE:\n#+STARTUP: logdrawer content\n#+AUTHOR: Krupal\n:END:\n\n"))
+          ))
+  )
+#+end_src
+*** Org-roam-ui
+#+begin_src emacs-lisp
+(use-package org-roam-ui
+  :ensure t
+  :after org-roam ;; or :after org
+  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+  ;;         a hookable mode anymore, you're advised to pick something yourself
+  ;;         if you don't care about startup time, use
+  ;;  :hook (after-init . org-roam-ui-mode)
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t)
+
+  (defun kc-org-roam-ui-default-browser (old-fun &rest args)
+    (let ((browse-url-browser-function #'browse-url-default-browser))
+      (apply old-fun args)
+      ))
+
+  (advice-add 'org-roam-ui-mode :around 'kc-org-roam-ui-default-browser)
+  (advice-add 'org-roam-ui-open :around 'kc-org-roam-ui-default-browser)
+  (advice-add 'org-roam-ui-node-zoom :around 'kc-org-roam-ui-default-browser)
+  (advice-add 'org-roam-ui-node-local :around 'kc-org-roam-ui-default-browser)
+
+  )
+#+end_src
+** Pdf tools
+#+begin_src emacs-lisp
+(use-package pdf-tools
+  :ensure t
+  :commands (pdf-tools-install-noverify)
+  :general
+  (:states '(normal visual)
+	   :keymaps 'pdf-view-mode-map
+	   "J" #'pdf-view-next-page-command
+	   "K" #'pdf-view-previous-page-command
+	   "gj" #'pdf-view-scroll-up-or-next-page
+	   "gk" #'pdf-view-scroll-down-or-previous-page
+	   "zt" #'pdf-view-themed-minor-mode
+	   )
+  
+  :init
+  (pdf-tools-install-noverify) 
+
+  :config
+  ;; disable hl-line-mode when in pdf-view buffer
+  (add-hook 'pdf-view-mode-hook (lambda ()
+                                  (hl-line-mode 0)
+                                  ))
+  
+  ;; disable cursor when using evil mode, thin border
+  (add-hook 'pdf-view-mode-hook
+	    (lambda ()
+	      (set (make-local-variable 'evil-normal-state-cursor) (list nil))))
+  
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-links-browse-uri-function 'kill-new)
+  (setq pdf-view-midnight-invert nil)
+  (setq pdf-view-midnight-colors '("#bbc2cf" . "#282c34"))
+  )
+#+end_src
+** Perspective
+#+begin_src emacs-lisp
+(use-package perspective
+  :ensure t
+  :config
+  (setq persp-suppress-no-prefix-key-warning t)
+
+  (setq persp-sort 'created)
+
+  (setq persp-modestring-dividers '("[" "] " "|"))
+
+  (persp-mode)
+
+  (add-hook 'persp-created-hook (lambda () (persp-add-buffer "\*kc\*") (persp-switch-to-buffer "\*kc\*")))
+
+  )
+#+end_src
+** Rainbow-delimiters
+#+begin_src emacs-lisp
+(use-package rainbow-delimiters
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+
+  )
+#+end_src
+** Real auto save
+#+begin_src emacs-lisp
+(use-package real-auto-save
+  :delight
+  :config
+  (setq real-auto-save-interval 5)
+  )
+#+end_src
+** Repeat-mode
+#+begin_src emacs-lisp
+(use-package repeat
+  :init (repeat-mode)
+  :preface
+  (defun kc-repeatize (keymap &optional time)
+    "Add `repeat-mode' support to a KEYMAP."
+    (map-keymap
+     (lambda (_key cmd)
+       (when (symbolp cmd)
+         (progn (put cmd 'repeat-map keymap)
+                (when time
+                  (put cmd 'repeat-exit-timeout time)))))
+     (symbol-value keymap)))
+
+  (defvar kc-scroll-repeat-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "j") 'good-scroll-up)
+      (define-key map (kbd "k") 'good-scroll-down)
+      (define-key map (kbd "J") 'kc-good-scroll-up-half-screen)
+      (define-key map (kbd "K") 'kc-good-scroll-down-half-screen)
+      map))
+
+  (defvar kc-evil-horizontal-scroll-repeat-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "l") 'kc-evil-scroll-right)
+      (define-key map (kbd "h") 'kc-evil-scroll-left)
+      (define-key map (kbd "L") 'evil-scroll-right)
+      (define-key map (kbd "H") 'evil-scroll-left)
+      map))
+
+  :config
+  (kc-repeatize 'kc-scroll-repeat-map 1)
+  (kc-repeatize 'kc-evil-horizontal-scroll-repeat-map 1)
+  )
+#+end_src
+** Spell-fu
+#+begin_src emacs-lisp
+(use-package spell-fu
+  :ensure t
+
+  :general
+  (:states '(normal visual)
+		   "]s" #'spell-fu-goto-next-error
+		   "[s" #'spell-fu-goto-previous-error
+		   )
+
+  :config
+  (setq flyspell-default-dictionary "en")
+  (setq ispell-dictionary "en")
+
+  (add-hook 'org-mode-hook
+			(lambda ()
+			  (setq spell-fu-faces-exclude
+					'(org-block-begin-line
+					  org-block-end-line
+					  org-code
+					  org-date
+					  org-drawer org-document-info-keyword
+					  org-ellipsis
+					  org-link
+					  org-meta-line
+					  org-properties
+					  org-properties-value
+					  org-special-keyword
+					  org-src
+					  org-tag
+					  org-verbatim))
+			  (spell-fu-mode)))
+
+  )
+#+end_src
+** Tramp 
+#+begin_src emacs-lisp
+(use-package tramp
+  :defer t
+
+  :config
+  (setq enable-remote-dir-locals nil)
+  ;; ensure the file path for tramp bookmarks starts with
+  ;; /scp:host:/path/to/file
+  (setq tramp-default-method "scp")
+
+  ;; Don't prompt to open authinfo.gpg while calling tramp.
+  (setq tramp-completion-use-auth-sources nil)
+
+  (connection-local-set-profile-variables
+   'remote-without-auth-sources '((auth-sources . nil)))
+
+  (connection-local-set-profiles
+   '(:application tramp) 'remote-without-auth-sources)
+
+
+  ;; Open files in Docker containers like so: /docker:drunk_bardeen:/etc/passwd
+  (push
+   (cons
+    "podman"
+    '((tramp-login-program "podman")
+      (tramp-login-args (("exec" "-it") ("%h") ("/bin/bash")))
+      (tramp-remote-shell "/bin/sh")
+      (tramp-remote-shell-args ("-i") ("-c"))))
+   tramp-methods)
+
+  (push
+   (cons
+    "docker"
+    '((tramp-login-program "docker")
+      (tramp-login-args (("exec" "-it") ("%h") ("/bin/bash")))
+      (tramp-remote-shell "/bin/sh")
+      (tramp-remote-shell-args ("-i") ("-c"))))
+   tramp-methods)
+
+  )
+#+end_src
+** Transients
+#+begin_src emacs-lisp
+(use-package transient
+  :general
+  (:keymaps 'transient-map
+	    "<escape>" #'transient-quit-one
+	    )
+
+  :config
+  (transient-define-prefix kc-org-roam-insert ()
+    "KC Org roam transient insert with several options"
+    [:class transient-columns
+            ["All Nodes"
+             ("i" "normal insert" org-roam-node-insert)
+             ]
+            ["File Nodes only"
+             ("f" "file nodes insert" (lambda ()
+                                        (interactive)
+                                        (org-roam-node-insert 'kc-org-roam-file-node-filter)))
+             ]]
+    [ "Quit"
+      ("q" "Quit" transient-quit-one)
+      ]
+    )
+
+  (transient-define-prefix kc-transient-resize-window ()
+    "KC transient to resize split windows"
+    [:class transient-columns
+	    ["Horizontal"
+	     ("h" "Increase width"
+	      (lambda () (interactive) (evil-window-increase-width 15)) :transient t)
+	     ("l" "Decrease width"
+	      (lambda () (interactive) (evil-window-decrease-width 15)) :transient t)
+	     ]
+	    ["Vertical"
+	     ("j" "Decrease height" evil-window-decrease-height :transient t)
+	     ("k" "Increase height" evil-window-increase-height :transient t)
+	     ]
+	    ]
+    [ "Quit"
+      ("q" "Quit" transient-quit-one)
+      ])
+
+  )
+#+end_src
+** Vertico and related
+*** Vertico
+#+begin_src emacs-lisp
+(use-package vertico
+  :ensure t
+  :general
+  (:states '(normal visual)
+	       :no-autoload t
+	       :keymaps 'vertico-map
+	       "<escape>" #'abort-minibuffers
+	       "<return>" #'vertico-exit
+	       "J" #'vertico-scroll-up
+	       "K" #'vertico-scroll-down
+	       "SPC ;" #'vertico-quick-exit
+	       "j" '(vertico-next :which-key "vertico-next")
+	       "k" '(vertico-previous :which-key "vertico-previous")
+	       )
+
+  :config
+  (setq vertico-cycle t)
+  (setq vertico-count 20)
+  (vertico-mode 1)
+
+  )
+
+;; Configure directory extension.
+(use-package vertico-directory
+  :after vertico
+  :ensure nil
+  ;; More convenient directory navigation commands
+  :bind (:map vertico-map
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  ;; Tidy shadowed file names
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+(use-package vertico-multiform
+  :config
+
+  (vertico-multiform-mode)
+
+  ;; define the toolbox, that'll hold all tools that you can write to transform
+  ;; candidates
+  (defvar kc-vertico-transform-functions nil)
+
+  ;; this is like advising, using common lisp
+  (cl-defmethod vertico--format-candidate :around
+    (cand prefix suffix index start &context ((not kc-vertico-transform-functions) null))
+    (dolist (fun (ensure-list kc-vertico-transform-functions))
+      (setq cand (funcall fun cand)))
+    (cl-call-next-method cand prefix suffix index start))
+
+  (defun kc-vertico-highlight-directory (file)
+    "If FILE ends with a slash, highlight it as a directory."
+    (if (string-suffix-p "/" file)
+	(propertize file 'face 'font-lock-constant-face) ; or face 'dired-directory
+      file)
+    )
+
+  (defun kc-sort-directories-first (files)
+    ;; Still sort by history position, length and alphabetically
+    (setq files (vertico-sort-history-length-alpha files))
+    ;; But then move directories first
+    (nconc (seq-filter (lambda (x) (string-suffix-p "/" x)) files)
+           (seq-remove (lambda (x) (string-suffix-p "/" x)) files)))
+
+  ;; function to highlight enabled modes similar to counsel-M-x
+  (defun kc-vertico-highlight-enabled-mode (cmd)
+    "If MODE is enabled, highlight it as font-lock-constant-face."
+    (let ((sym (intern cmd)))
+      (if (or (eq sym major-mode)
+              (and
+               (memq sym minor-mode-list)
+               (boundp sym)))
+	  (propertize cmd 'face 'font-lock-constant-face)
+	cmd)))
+
+  (add-to-list 'vertico-multiform-categories
+               '(file
+		 ;; this is also defined in the wiki, uncomment if used
+		 ;; (vertico-sort-function . kc-sort-directories-first)
+		 (kc-vertico-transform-functions . kc-vertico-highlight-directory)
+		 ))
+
+  (add-to-list 'vertico-multiform-commands
+               '(execute-extended-command
+                 (kc-vertico-transform-functions . kc-vertico-highlight-enabled-mode)))
+  )
+#+end_src
+*** Consult
+#+begin_src emacs-lisp
+(use-package consult
+  :after vertico
+  :ensure t
+  :general
+  (:states '(normal visual)
+           "SPC ss" #'consult-line
+	   "SPC sf" #'consult-locate
+           )
+  :preface
+  (defun kc-consult-ripgrep (oldfun &rest args)
+    (if (file-remote-p default-directory)
+        (let ((consult--find-regexp-type 'basic)
+              (consult--grep-regexp-type 'pcre)
+              (consult--ripgrep-regexp-type 'extended))
+          (apply oldfun args))
+      (apply oldfun args))
+    )
+
+  :config
+  (consult-customize
+   consult-buffer consult-ripgrep consult-recent-file
+   :preview-key "M-.")
+
+  (setq consult-ripgrep-args
+        "rg --null --line-buffered --no-ignore --hidden --with-filename --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --line-number ."
+        )
+  (when (eq system-type 'darwin)
+    (setq consult-locate-args "mdfind"))
+
+  (advice-add 'consult-ripgrep :around 'kc-consult-ripgrep)
+
+  )
+#+end_src
+*** Orderless
+#+begin_src emacs-lisp
+(use-package orderless
+  :ensure t
+
+  :custom
+  (completion-styles '(orderless basic))
+  ;; make sure in the below, there is no 'basic' and instead 'orderless',
+  ;; else it will change candidates based on point position
+  (completion-category-overrides '((file (styles orderless partial-completion))))
+  )
+#+end_src
+*** Marginalia
+#+begin_src emacs-lisp
+(use-package marginalia
+  :ensure t
+
+  :commands (marginalia-mode)
+
+  :bind (:map minibuffer-local-map
+              ("M-A" . marginalia-cycle))
+
+  :init
+  (marginalia-mode)
+
+  :config
+  (add-to-list 'marginalia-command-categories '(persp-switch-to-buffer . buffer))
+
+  )
+
+#+end_src
+** Vterm 
+#+begin_src emacs-lisp
+(use-package vterm
+  :ensure t
+  :commands (vterm)
+  :general
+  (leader	   
+    "V" #'vterm)
+
+  :config
+  (setq vterm-shell "/bin/bash")
+  (setq vterm-tramp-shells '(("docker" "/bin/sh") ("scp" "/bin/bash")))
+
+  )
+#+end_src
+** Which key
+#+begin_src emacs-lisp
+(use-package which-key
+  :ensure t
+  :delight
+  :init (which-key-mode)
+  :config
+  (setq which-key-idle-delay 1))
+#+end_src
+** Winner mode
+#+begin_src emacs-lisp
+(use-package winner
+  :config
+  (winner-mode 1)
+  )
+#+end_src
+** Writeroom mode
+#+begin_src emacs-lisp
+(use-package writeroom-mode
+  :ensure t
+
+  :general
+  (:states '(normal visual)
+	   :keymaps 'writeroom-mode-map
+	   "C-<" #'writeroom-decrease-width
+	   "C->" #'writeroom-increase-width
+	   )
+
+  :config
+  (defun kc-refresh-writeroom-mode ()
+    "Refresh writeroom-mode by kc"
+    (interactive)
+    (if writeroom-mode
+        (progn (writeroom-mode 0) (writeroom-mode 1)(kc-header))
+      (progn (writeroom-mode 1)(kc-header))
+      ))
+
+  (setq writeroom-width 0.65)
+  (setq writeroom-mode-line t)
+  (setq writeroom-fullscreen-effect nil)
+  (setq writeroom-maximize-window nil)
+
+  (defun kc-refresh-writeroom-mode ()
+    "Refresh writeroom-mode by kc"
+    (interactive)
+    (if writeroom-mode
+        (progn (writeroom-mode 0)(writeroom-mode 1)(kc-header)(menu-bar-mode 1))
+      (progn (writeroom-mode 1)(kc-header)(menu-bar-mode 1))
+      )
+    )
+
+  (defun kc-menu-bar-mode ()
+    (menu-bar-mode 1)
+    )
+
+  (add-hook 'writeroom-mode-hook #'kc-menu-bar-mode)
+  (add-hook 'writeroom-mode-disable-hook #'kc-header)
+  )
+#+end_src
+* Custom functions
+** Change background file-visiting or not
+#+begin_src emacs-lisp
+;; This function adjusts the background color for buffers that are not 
+;; associated with a file. The goal is to differentiate buffers that represent
+;; files from other types of buffers (like system or internal buffers).
+(defun kc-set-non-file-visiting-background ()
+  "Set background for non-file-visiting buffer."
+  ;; Check if the current buffer has an associated file.
+  ;; If not, adjust its background color.
+  (interactive)
+  (unless (buffer-file-name)
+    (face-remap-add-relative 'default :background "#000000")))
+
+;; Attach the function to 'after-change-major-mode-hook'. This ensures
+;; that every time the major mode of a buffer changes (which happens often),
+;; the buffer's background color is potentially adjusted.
+(add-hook 'after-change-major-mode-hook 'kc-set-non-file-visiting-background)
+
+;; This function specifically targets certain internal buffers, particularly
+;; those related to the minibuffer and the echo area. These buffers are a bit
+;; special in that they aren't easily targeted with normal hooks, so we handle
+;; them separately.
+(defun kc-minibuffer-background-fix ()
+  "Ensure the minibuffer and echo area have the right background."
+  (interactive)
+  ;; Iterate over a list of specific buffer names.
+  (dolist (buf '(" *Minibuf-0*" " *Minibuf-1*" " *Echo Area 0*" " *Echo Area 1*" "*Messages*"))
+    ;; If the buffer exists, operate on it.
+    (when-let ((buffer (get-buffer buf)))
+      (with-current-buffer buffer
+        ;; If a buffer is empty, its background color might not be visible.
+        ;; To avoid this, ensure it contains at least one space.
+        (when (= (buffer-size) 0)
+          (insert " "))
+        ;; Adjust the buffer's background color.
+        (kc-set-non-file-visiting-background)))))
+
+;; Call the function to ensure the minibuffer and echo area have the right 
+;; background when Emacs starts up.
+(kc-minibuffer-background-fix)
+
+#+end_src
+** Elisp highlight symbols
+#+begin_src emacs-lisp
+(defvar kc-emacs-lisp--face nil)
+
+(defun kc-emacs-lisp-highlight-vars-and-faces (end)
+  "Match defined variables and functions.
+
+Functions are differentiated into special forms, built-in functions and
+library/userland functions"
+  (catch 'matcher
+    (while (re-search-forward "\\(?:\\sw\\|\\s_\\)+" end t)
+      (let ((ppss (save-excursion (syntax-ppss))))
+        (cond ((nth 3 ppss)  ; strings
+               (search-forward "\"" end t))
+              ((nth 4 ppss)  ; comments
+               (forward-line +1))
+              ((let ((symbol (intern-soft (match-string-no-properties 0))))
+                 (and (cond ((null symbol) nil)
+                            ((eq symbol t) nil)
+                            ((keywordp symbol) nil)
+                            ((special-variable-p symbol)
+                             (setq kc-emacs-lisp--face 'font-lock-variable-name-face))
+                            ((and (fboundp symbol)
+                                  (eq (char-before (match-beginning 0)) ?\()
+                                  (not (memq (char-before (1- (match-beginning 0)))
+                                             (list ?\' ?\`))))
+                             (let ((unaliased (indirect-function symbol)))
+                               (unless (or (macrop unaliased)
+                                           (special-form-p unaliased))
+                                 (let (unadvised)
+                                   (while (not (eq (setq unadvised (ad-get-orig-definition unaliased))
+                                                   (setq unaliased (indirect-function unadvised)))))
+                                   unaliased)
+                                 (setq kc-emacs-lisp--face
+                                       (if (subrp unaliased)
+                                           'font-lock-constant-face
+                                         'font-lock-function-name-face))))))
+                      (throw 'matcher t)))))))
+    nil))
+
+
+(font-lock-add-keywords
+ 'emacs-lisp-mode
+ (append
+  ;; highlight defined, special variables & functions
+  `((kc-emacs-lisp-highlight-vars-and-faces . kc-emacs-lisp--face))))
+#+end_src
+** Header
+#+begin_src emacs-lisp
+(defun kc-header ()
+  (interactive)
+  (setq header-line-format " ")
+  (set-face-attribute 'header-line nil :height 120 :background "#171717")
+  )
+#+end_src
+** Kill all buffers
+#+begin_src emacs-lisp
+(defun kc-kill-all-buffers ()
+  "Kill all buffers except essential ones."
+  (interactive)
+  (dolist (buffer (buffer-list))
+    (let ((name (buffer-name buffer)))
+      (unless (or (string-prefix-p " " name)
+                  (member name '("*scratch*" "*Messages*")))
+        (kill-buffer buffer)))))
+
+#+end_src
+** Jump to projects folder
+#+begin_src emacs-lisp
+(defun kc-jump-to-projects ()
+  (interactive)
+  (find-file "~/Documents/")
+  )
+#+end_src
+
+** KC magic write mode
+#+begin_src emacs-lisp
+(defun kc-magic-write-mode ()
+  (interactive)
+  (progn
+    (text-scale-adjust 0)
+    (visual-line-mode -1)
+    (setq visual-fill-column-width 2)
+    (visual-fill-column-mode 1)
+    (visual-fill-column--adjust-window)
+    (evil-window-set-height 1)
+    )
+  )
+#+end_src
+** Startup splash or dashboard screen
+Borrowed from doom Emacs doom-dashboard
+#+begin_src emacs-lisp
+(defvar kc-dashboard-name "*kc*"
+  "The name to use for the dashboard buffer.")
+
+(defvar kc-dashboard-functions
+  '(kc-dashboard-widget-banner
+    kc-dashboard-widget-footer
+    )
+  "List of widget functions to run in the dashboard buffer to construct the
+dashboard. These functions take no arguments and the dashboard buffer is current
+while they run.")
+
+(defvar kc-dashboard-ascii-banner-fn #'kc-dashboard-draw-ascii-banner-fn
+  "The function used to generate the ASCII banner on Kc's dashboard.")
+
+(defvar kc-dashboard-banner-padding '(0 . 6)
+  "Number of newlines to pad the banner with, above and below, respectively.")
+
+(defvar kc-dashboard-inhibit-refresh nil
+  "If non-nil, the kc buffer won't be refreshed.")
+
+(defvar kc-dashboard-inhibit-functions ()
+  "A list of functions which take no arguments. If any of them return non-nil,
+dashboard reloading is inhibited.")
+
+(defvar kc-dashboard--width 80)
+(defvar kc-dashboard--reload-timer nil)
+
+(setq fancy-splash-image "~/.emacs.d/misc/splash-images/doom-molokai-500Final.svg")
+
+;;
+;;; Bootstrap
+
+(defvar kc-fallback-buffer-name "*scratch*" "The name of the buffer to fall back to if no other buffers exist (will create
+it if it doesn't exist).")
+
+(defun kc-dashboard-init-h (&optional _frame)
+  "Initializes Kc's dashboard."
+  (unless noninteractive
+    ;; Ensure the dashboard becomes Emacs' go-to buffer when there's nothing
+    ;; else to show.
+    (setq kc-fallback-buffer-name kc-dashboard-name
+          initial-buffer-choice #'kc-fallback-buffer)
+    (when (equal (buffer-name) "*scratch*")
+      (set-window-buffer nil (kc-fallback-buffer))
+      (kc-dashboard-reload))
+    ;; Ensure the dashboard is up-to-date whenever it is switched to or resized.
+    (add-hook 'window-configuration-change-hook #'kc-dashboard-resize-h)
+    (add-hook 'window-size-change-functions #'kc-dashboard-resize-h)
+    (add-hook 'delete-frame-functions #'kc-dashboard-reload-frame-h)
+    ))
+
+
+;;
+;;; Faces
+(defgroup kc-dashboard nil
+  "Manage how kc-dashboard is coloured and themed."
+  :prefix "kc-dashboard"
+  :group 'kc-themes)
+
+(defface kc-dashboard-banner '((t (:inherit font-lock-comment-face)))
+  "Face used for the KC banner on the dashboard"
+  :group 'kc-dashboard)
+
+(defface kc-dashboard-footer '((t (:inherit font-lock-keyword-face)))
+  "Face used for the footer on the dashboard"
+  :group 'kc-dashboard)
+
+
+;;
+;;; Major mode
+
+(define-derived-mode kc-dashboard-mode special-mode
+  "Impermanence"
+  :syntax-table nil
+  :abbrev-table nil
+  (buffer-disable-undo)
+  (setq-local evil-normal-state-cursor '(nil))
+  )
+
+;;
+;;; Hooks
+
+
+(defun kc-dashboard-reload-frame-h (_frame)
+  "Reload the dashboard after a brief pause. This is necessary for new frames,
+whose dimensions may not be fully initialized by the time this is run."
+  (when (timerp kc-dashboard--reload-timer)
+    (cancel-timer kc-dashboard--reload-timer)) ; in case this function is run rapidly
+  (setq kc-dashboard--reload-timer
+        (run-with-timer 0.1 nil #'kc-dashboard-reload t)))
+
+(defun kc-dashboard-resize-h (&rest _)
+  "Recenter the dashboard, and reset its margins and fringes."
+  (let (buffer-list-update-hook
+        window-configuration-change-hook
+        window-size-change-functions)
+    (when-let (windows (get-buffer-window-list (kc-fallback-buffer) nil t))
+      (dolist (win windows)
+        (set-window-start win 0)
+        (set-window-fringes win 0 0)
+        (set-window-margins
+         win (max 0 (/ (- (window-total-width win) kc-dashboard--width) 2))))
+      (with-current-buffer (kc-fallback-buffer)
+        (save-excursion
+          (with-silent-modifications
+            (goto-char (point-min))
+            (delete-region (line-beginning-position)
+                           (save-excursion (skip-chars-forward "\n")
+                                           (point)))
+            (insert (make-string
+                     (+ (max 0 (- (/ (window-height (get-buffer-window)) 2)
+                                  (round (/ (count-lines (point-min) (point-max))
+                                            2))))
+                        (car kc-dashboard-banner-padding))
+                     ?\n))))))))
+
+
+;;
+;;; Library
+
+(defun kc-dashboard-p (buffer)
+  "Returns t if BUFFER is the dashboard buffer."
+  (eq buffer (get-buffer kc-dashboard-name)))
+
+(defun kc-dashboard-reload (&optional force)
+  "Update the KC scratch buffer (or create it, if it doesn't exist)."
+  (when (or (and (not kc-dashboard-inhibit-refresh)
+                 (get-buffer-window (kc-fallback-buffer))
+                 (not (window-minibuffer-p (frame-selected-window)))
+                 )
+            force)
+    (with-current-buffer (kc-fallback-buffer)
+      (with-silent-modifications
+        (let ((pt (point)))
+          (unless (eq major-mode 'kc-dashboard-mode)
+            (kc-dashboard-mode))
+          (erase-buffer)
+          (run-hooks 'kc-dashboard-functions)
+          (goto-char pt)
+          )
+        (kc-dashboard-resize-h)
+        (current-buffer)))))
+
+;; helpers
+(defun kc-dashboard--center (len s)
+  (concat (make-string (ceiling (max 0 (- len (length s))) 2) ? )
+          s))
+
+
+;;
+;;; Widgets
+
+(defun kc-dashboard-draw-ascii-banner-fn ()
+  (let* ((banner
+          '(""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            "                                  E M A C S                                    "
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ""
+            ))
+         (longest-line (apply #'max (mapcar #'length banner))))
+    (put-text-property
+     (point)
+     (dolist (line banner (point))
+       (insert (kc-dashboard--center
+                kc-dashboard--width
+                (concat
+                 line (make-string (max 0 (- longest-line (length line)))
+                                   32)))
+               "\n"))
+     'face 'kc-dashboard-banner)))
+
+(defun kc-dashboard-widget-banner ()
+  (let ((point (point)))
+    (when (functionp kc-dashboard-ascii-banner-fn)
+      (funcall kc-dashboard-ascii-banner-fn))
+    (when (and (display-graphic-p)
+               (stringp fancy-splash-image)
+               (file-readable-p fancy-splash-image))
+      (let ((image (create-image (fancy-splash-image-file))))
+        (add-text-properties
+         point (point) `(display ,image rear-nonsticky (display)))
+        (save-excursion
+          (goto-char point)
+          (insert (make-string
+                   (truncate
+                    (max 0 (+ 1 (/ (- kc-dashboard--width
+                                      (car (image-size image nil)))
+                                   2))))
+                   ? ))))
+      (insert (make-string (or (cdr kc-dashboard-banner-padding) 0)
+                           ?\n)))))
+
+(defun kc-dashboard-widget-footer ()
+  (insert
+   "\n"
+   (kc-dashboard--center
+    (- kc-dashboard--width 2)
+    (with-temp-buffer
+      (insert-text-button (or
+                           (propertize "Life is temporary, time is limited, what will you achieve today?" 'face 'kc-dashboard-footer)))
+      (buffer-string)))
+   "\n"))
+
+
+(defun kc-fallback-buffer nil "Returns the fallback buffer, creating it if necessary. By default this is the\nscratch buffer."
+       (let
+           (buffer-list-update-hook)
+         (get-buffer-create kc-fallback-buffer-name)))
+
+(defun kc-dashboard/open (frame)
+  "Switch to the dashboard in the current window, of the current FRAME."
+  (interactive (list (selected-frame)))
+  (with-selected-frame frame
+    (switch-to-buffer (kc-fallback-buffer))
+    (kc-dashboard-reload t)))
+
+(kc-dashboard-init-h)
+
+(defun kc-prevent-killing-splash-buffer ()
+  "Prevent killing the *kc* buffer."
+  (or (not (equal (buffer-name (current-buffer)) "*kc*"))
+      (progn
+        (message "Cannot kill *kc* buffer.")
+        nil)))
+
+(add-to-list 'kill-buffer-query-functions 'kc-prevent-killing-splash-buffer)
+
+#+end_src
+
+* +Local settings+
+:PROPERTIES:
+:VISIBILITY: folded
+:END:
+# Local Variables:
+# eval: (flyspell-mode -1)
+# eval: (spell-fu-mode -1)
+# End:
