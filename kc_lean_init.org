@@ -1748,6 +1748,78 @@ Made for `org-tab-first-hook' in evil-mode."
         ;; (t (call-interactively #'indent-for-tab-command)) ;; kc added this, needs testing
         ))
 #+end_src
+**** Org datetree mark calendar and goto
+
+KC own functions to mark dates in a datetree of a current org buffer and a 'goto' function to jump to the corresponding date which is interactively chosen.
+
+#+begin_src emacs-lisp
+(defvar kc-org-datetree-buffer nil
+  "Buffer variable to remember the org buffer containing datetree
+  dates for calendar operations.")
+
+(defface kc-org-datetree-date-face
+  '((t :inherit (org-link) :foreground "gold"))
+  "Face for dates with a daily-note in the calendar.")
+
+(defun kc-org-datetree-extract-dates ()
+  "Extract dates from datetree headings in the current Org buffer."
+  (with-current-buffer kc-org-datetree-buffer
+    (let (dates)
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward
+                ;; using concat for code readability
+                (concat "^[*]+ "
+                        "\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\) "
+                        "\\(Sunday\\|Monday\\|Tuesday\\|Wednesday\\|Thursday\\|"
+                        "Friday\\|Saturday\\)$")
+                nil t)
+          (let* ((date-str (match-string-no-properties 1))
+                 (date-parts (org-parse-time-string date-str))
+                 (d (nth 3 date-parts))
+                 (m (nth 4 date-parts))
+                 (y (nth 5 date-parts)))
+            (push (list m d y) dates))))
+      dates)))
+
+(defun kc-org-datetree-mark-dates-in-calendar ()
+  "Mark datetree dates in the calendar from the remembered Org buffer."
+  (when (and kc-org-datetree-buffer
+             (buffer-live-p kc-org-datetree-buffer))
+    (let ((dates (kc-org-datetree-extract-dates)))
+      (dolist (date dates)
+        (when (calendar-date-is-visible-p date)
+          (calendar-mark-visible-date date 'kc-org-datetree-date-face))))))
+
+(add-hook 'calendar-today-visible-hook #'kc-org-datetree-mark-dates-in-calendar)
+(add-hook 'calendar-today-invisible-hook #'kc-org-datetree-mark-dates-in-calendar)
+
+(defun kc-org-datetree-goto-date ()
+  "Use the calendar to choose a date and then jump to the corresponding datetree heading."
+  (interactive)
+  (if (eq major-mode 'org-mode)
+      ;; will run only if the buffer where command called is an org buffer
+      (progn
+        (setq kc-org-datetree-buffer (current-buffer))
+        ;; Ask the user for a date using org's date selector
+        (let* ((date (org-read-date nil nil nil "Jump to date: "))
+               (time (org-parse-time-string date))
+               (year (nth 5 time))
+               (month (nth 4 time))
+               (day (nth 3 time)))
+          ;; Ensure we're in the correct buffer
+          (switch-to-buffer kc-org-datetree-buffer)
+          ;; Use the function to find (or create) the date heading
+          (org-datetree-find-date-create (list month day year))
+          (org-reveal)
+          ))
+    ;; If called from any other buffer that is not org, reset
+    (progn
+      (setq kc-org-datetree-buffer nil)
+      (message "Not an org buffer"))))
+
+
+#+end_src
 ** Org agenda
 #+begin_src emacs-lisp
 (use-package org-agenda
