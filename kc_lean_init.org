@@ -2112,10 +2112,13 @@ it'll only show file nodes"
   (advice-add 'org-roam--list-files-rg :filter-args #'kc-add-rg-ignored-files-flag)
 
   (setq org-roam-mode-sections
-        (list #'org-roam-backlinks-section
-              #'org-roam-reflinks-section
-              ;; #'org-roam-unlinked-references-section ;; computationally intensive
-              ))
+        '((org-roam-backlinks-section :unique t)
+          (org-roam-reflinks-section)
+          ;; #'org-roam-unlinked-references-section ;; computationally intensive
+          ))
+
+  ;; org roam buffer initial visibility
+  (add-to-list 'magit-section-initial-visibility-alist (cons 'org-roam-node-section 'hide))
 
   (org-roam-db-autosync-mode)
 
