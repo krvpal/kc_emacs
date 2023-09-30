@@ -299,6 +299,7 @@ auto-capitalize-words variable that has been set using this."
     "vt" #'kc-org-babel-tangle-special
     "wO" #'balance-windows
     "wc" #'ace-delete-window
+    "wd" #'delete-other-windows
     "wh" #'evil-window-left
     "wj" #'evil-window-down
     "wk" #'evil-window-up
