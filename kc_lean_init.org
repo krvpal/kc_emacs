@@ -92,6 +92,10 @@
   (add-to-list 'package-archives
                '("melpa" . "http://melpa.org/packages/") t)
 
+  ;; add gnu-devel to get latest developemnt versions
+  (add-to-list 'package-archives
+               '("gnu-devel" . "https://elpa.gnu.org/devel/") t)
+
   ;; modeline customisation
   (display-time-mode)
   (line-number-mode)
@@ -699,6 +703,182 @@ This package adds additional font-lock rules to provide a more colourful Dired b
   (setq ediff-split-window-function 'split-window-horizontally)
   (setq ediff-window-setup-function 'ediff-setup-windows-plain)
 
+  )
+#+end_src
+** Ess
+- To make the 'comint' buffer scroll to bottom see [[https://kieranhealy.org/blog/archives/2009/10/12/make-shift-enter-do-a-lot-in-ess/][kieranhealy.org blog to set 'comint-scroll-to-bottom-on-output']].
+- Kc wrote own function as a hack to enable 'variable' or column names auto-completion. Type the data-frame name and '$', call the ~kc-ess-r-complete-name~ function after that. Make sure that if it is org-src-edit buffer, that it is associated with an ESS process by using ~C-c C-s~.
+- ESS buffer completion with =orderless= wasn't working, particularly for forms like ~table$~. Opened an [[https://github.com/oantolin/orderless/issues/108][github orderless issue]], and found solution [[https://github.com/oantolin/orderless/issues/111][github issue]]. Basically setting ~completion-styles~ as ~(orderless basic)~. See for further updates, this only affects custom function for ESS.
+- [2022-03-06 Sun] =ess-rdired-refresh= trying to suppress error message /args out of range/ using ~advice-add~. Seems to not work when rdired is started without any objects loaded first.
+- [2022-08-06 Sat] ESS mode in MacOs loses it's font face after printing a tibble or an error, so had to create a custom function to set ~ansi-color-for-comint-mode~ to ='filter=. See [[https://github.com/emacs-ess/ESS/issues/1193][github ess issue]]
+
+#+begin_src emacs-lisp
+(use-package ess
+  :ensure t
+  :defer t
+  :general
+  (:states '(normal visual)
+	       :keymaps 'ess-r-mode-map
+           "SPC mv" #'ess-view-data-print
+           "SPC mj" #'ess-eval-paragraph
+           "SPC mr" #'ess-eval-region
+           "SPC me" #'kc-ess-eval-object-at-point
+           "SPC mg" #'kc-ess-glimpse-object-at-point
+           "SPC mf" #'ess-switch-process
+           "SPC mh" #'ess-display-help-on-object
+           "SPC m'" #'ess-complete-object-name
+           "SPC m;" #'kc-ess-r-complete-name
+           "<tab>" #'ess-indent-or-complete
+	       )
+  (:states '(normal visual)
+	       :keymaps 'ess-r-help-mode-map
+           "n" #'ess-skip-to-next-section
+           "p" #'ess-skip-to-previous-section
+	       )
+
+  :preface
+  (defun kc-ess-r-variable-completion ()
+    (interactive)
+    (save-excursion
+      (unwind-protect
+          (progn
+            (search-backward "$")
+            (let ((st (+ (point) 1)))
+              (progn
+                (modify-syntax-entry ?_ "w")
+                (backward-word)
+                (delete-region st (point)))
+              )
+            )
+        (modify-syntax-entry ?_ "_")
+        )))
+
+  (defun kc-ess-r-complete-name ()
+    (interactive)
+    (condition-case-unless-debug nil
+        (progn
+          (insert "$")
+          (ess-complete-object-name)
+          (kc-ess-r-variable-completion)
+          )
+      (error nil))
+    )
+
+  (defun kc-ess-rdired-suppress-refresh-error (old-fun &rest args)
+    (let ((inhibit-message t)
+          )
+      (apply old-fun args))
+    )
+
+  (defun kc-ess-completion-use-style (old-fun &rest args)
+    (let ((completion-styles '(orderless basic partial-completion emacs22)))
+      (apply old-fun args)
+      ))
+
+  (defun kc-ess-imenu-generic-expression()
+    (setq imenu-generic-expression
+          '(("Functions" "^\\([^ 	\n]+\\)[ 	\n]*\\(?:<-\\|=\\)[ 	\n]*function[ ]*(" 1)
+            ("Classes" "^.*setClass(\\(.*\\)," 1)
+            ("Coercions" "^.*setAs(\\([^,]+,[^,]*\\)," 1)
+            ("Generics" "^.*setGeneric(\\([^,]*\\)," 1)
+            ("Methods" "^.*set\\(Group\\|Replace\\)?Method(\\([^,]+,[^,]*\\)" 2)
+            ("Package" "^.*\\(library\\|require\\)(\\([^)]*\\)" 2)
+            ("Data" "^\\(.+\\)[ 	\n]-*\\(?:<-\\|=\\)[ 	\n]*\\(read\\|.*data\\.frame\\).*(" 1)
+            ("KC Variables" "^\\(.+\\)[ 	\n]-*\\(?:<-\\)" 1)
+            )
+          ))
+
+  (defun kc-ess-eval-object-at-point ()
+    "KC function to send object at point to the inferior R process to execute."
+    (interactive)
+    (unless (and ;; (string= "R" ess-dialect)
+             ess-local-process-name)
+      (error "Not in an R buffer with attached process"))
+    (let* ((proc (ess-get-process))
+           (obj ;; (current-word)
+            (ess-completing-read
+             "Object: "
+             (ess-get-words-from-vector "ls(envir = .GlobalEnv)\n")
+             nil nil (current-word))))
+      (ess-send-string proc obj)))
+
+  (defun kc-ess-glimpse-object-at-point ()
+    "KC function to send object at point to the inferior R process to execute."
+    (interactive)
+    (unless (and ;; (string= "R" ess-dialect)
+             ess-local-process-name)
+      (error "Not in an R buffer with attached process"))
+    (let* ((proc (ess-get-process))
+           (obj ;; (current-word)
+            (ess-completing-read
+             "Object: "
+             (ess-get-words-from-vector "ls(envir = .GlobalEnv)\n")
+             nil nil (current-word))))
+      (ess-send-string proc (concat "glimpse(" obj ")"))))
+
+  (when (eq system-type 'darwin)
+    (defun kc-ess-inferior-font-lock-fix ()
+      (setq-local ansi-color-for-comint-mode 'filter)))
+
+  :config
+  (setq ess-eval-visibly-p nil)
+  (setq ess-use-ido nil)
+  (setq comint-scroll-to-bottom-on-input t)
+  (setq comint-scroll-to-bottom-on-output t)
+  (setq comint-move-point-for-output t)
+  (setq comint-move-point-for-matching-input 'end-of-line)
+
+  (evil-set-initial-state 'ess-r-help-mode 'motion)
+
+
+  (setq ess-R-font-lock-keywords
+        '((ess-R-fl-keyword:keywords . t)
+          (ess-R-fl-keyword:constants . t)
+          (ess-R-fl-keyword:modifiers . t)
+          (ess-R-fl-keyword:fun-defs . t)
+          (ess-R-fl-keyword:assign-ops . t)
+          (ess-R-fl-keyword:%op% . t)
+          (ess-fl-keyword:fun-calls . t)
+          (ess-fl-keyword:numbers . t)
+          (ess-fl-keyword:operators . t)
+          (ess-fl-keyword:delimiters . t)
+          (ess-fl-keyword:= . t)
+          (ess-R-fl-keyword:F&T . t))
+        )
+
+  (setq ess-style 'OWN)
+
+  (setq ess-own-style-list
+        '((ess-indent-offset . 2)
+          (ess-offset-arguments . prev-line)
+          (ess-offset-arguments-newline . prev-line)
+          (ess-offset-block . prev-line)
+          (ess-offset-continued . straight)
+          (ess-align-nested-calls "ifelse")
+          (ess-align-arguments-in-calls "function[ 	]*(")
+          (ess-align-continuations-in-calls . t)
+          (ess-align-blocks control-flow)
+          (ess-indent-from-lhs arguments)
+          (ess-indent-from-chain-start . t)
+          (ess-indent-with-fancy-comments . t))
+        )
+  (add-hook 'ess-mode-hook #'kc-ess-imenu-generic-expression)
+  (advice-add 'ess-rdired-refresh :around #'kc-ess-rdired-suppress-refresh-error)
+  (advice-add 'ess-complete-object-name :around #'kc-ess-completion-use-style)
+
+  (when (eq system-type 'darwin)
+    (add-hook 'inferior-ess-mode-hook 'kc-ess-inferior-font-lock-fix)
+    (setq ess-eval-visibly 'nowait)
+    )
+  )
+
+#+end_src
+  
+** Ess-view-data
+#+begin_src emacs-lisp
+(use-package ess-view-data
+  :ensure t
+  :commands (ess-view-data-print)
   )
 #+end_src
 ** Garbage collection magic hack
@@ -2217,6 +2397,125 @@ it'll only show file nodes"
 
   )
 #+end_src
+** Python
+#+begin_src emacs-lisp
+(use-package python
+  :defer t
+  :general
+  (:states '(normal visual)
+           :keymaps 'python-ts-mode-map
+           "SPC md" #'kc-python-dtale-only-thing-at-point
+           "SPC mD" #'kc-python-dtale-thing-at-point
+           "SPC mh" #'kc-python-help-thing-at-point
+           "SPC mf" #'kc-python-black-format-file
+           "SPC mg" #'flymake-goto-next-error
+           "SPC mG" #'flymake-goto-prev-error
+           "SPC me" #'python-shell-send-statement
+           "SPC mr" #'python-shell-send-region
+           "SPC mb" #'python-shell-send-buffer
+           "SPC mF" #'python-shell-send-file
+           "SPC ms" #'python-shell-send-string
+           "SPC Lf" #'eglot-format
+           "SPC LF" #'eglot-format-buffer
+           "SPC me" #'python-shell-send-statement
+           "SPC mr" #'python-shell-send-region
+           "SPC mb" #'python-shell-send-buffer
+           "SPC mF" #'python-shell-send-file
+           "SPC ms" #'python-shell-send-string
+           "SPC Lf" #'eglot-format
+           "SPC LF" #'eglot-format-buffer
+           "SPC mp" #'run-python
+           )
+
+  :preface
+  (defun kc-python-dtale-thing-at-point (&optional arg)
+    "Wrap and send object at point with dtale() to the Python shell"
+    (interactive "P")
+    (cond
+     ((equal arg nil)
+      (let* ((obj (python-eldoc--get-symbol-at-point))
+             (str (concat "dtale.show(data=" obj ", host='0.0.0.0', port=40000, force=True)")))
+        (python-shell-send-string str)
+        ))
+     ((equal arg '(4))
+      (let* ((str (concat "dtale.global_state.cleanup()")))
+        (progn
+          (python-shell-send-string str)
+          (message "Killed all Dtale instances") )
+        )))
+    )
+
+  (defun kc-python-dtale-only-thing-at-point (&optional arg)
+    "Wrap and send object at point with dtale() to the Python shell.
+This will reset Dtale instances by killing all other before calling thing at point.
+
+With a Universal Arg, it will simply kill all instances"
+    (interactive "P")
+    (cond
+     ((equal arg nil)
+      (let* ((obj (python-eldoc--get-symbol-at-point))
+             (kill_str (concat "dtale.global_state.cleanup()"))
+             (str (concat "dtale.show(data=" obj ", host='0.0.0.0', port=40000, force=True)")))
+        (progn
+          (python-shell-send-string kill_str)
+          (python-shell-send-string str))
+        ))
+     ((equal arg '(4))
+      (let* ((str (concat "dtale.global_state.cleanup()")))
+        (progn
+          (python-shell-send-string str)
+          (message "Killed all Dtale instances") )
+        )))
+    )
+
+
+  (defun kc-python-help-thing-at-point ()
+    "Wrap and send object at point with help() to the Python shell"
+    (interactive)
+    (let* ((obj (python-eldoc--get-symbol-at-point))
+           (str (concat "help(" obj ")")))
+      (python-shell-send-string str)
+      ))
+
+  (defun kc-python-black-format-file ()
+    "After saving a .py file, run the Black python formatter. Black should be installed on host."
+    (interactive)
+    (when (and buffer-file-name (equal major-mode 'python-mode))
+      (let* (
+             (current-file (if (file-remote-p default-directory)
+                               (tramp-file-local-name (file-truename buffer-file-name))
+                             (princ buffer-file-name)
+                             ))
+             (cmd (concat "black " current-file))
+             )
+        (progn
+          (shell-command cmd)
+          (revert-buffer)
+          (message "Python Black formatting file done")
+          )
+        )))
+
+  :config
+  (add-hook 'inferior-python-mode-hook
+            (lambda()
+              (setq comint-move-point-for-output t)
+              ))
+
+  (add-hook 'python-mode-hook #'python-ts-mode)
+
+  )
+#+end_src
+** Pyvenv
+
+Activate and deactivate python virtual environments. Ensure that the minor mode is active first before calling activation.
+
+#+begin_src emacs-lisp
+(use-package pyvenv
+  :ensure t
+  :commands (pyvenv-activate pyvenv-mode pyvenv-deactivate)
+  )
+#+end_src
+
 ** Rainbow-delimiters
 #+begin_src emacs-lisp
 (use-package rainbow-delimiters
