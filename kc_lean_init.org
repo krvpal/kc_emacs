@@ -2480,7 +2480,7 @@ With a Universal Arg, it will simply kill all instances"
   (defun kc-python-black-format-file ()
     "After saving a .py file, run the Black python formatter. Black should be installed on host."
     (interactive)
-    (when (and buffer-file-name (equal major-mode 'python-mode))
+    (when (and buffer-file-name (memq major-mode '(python-mode python-ts-mode)))
       (let* (
              (current-file (if (file-remote-p default-directory)
                                (tramp-file-local-name (file-truename buffer-file-name))
