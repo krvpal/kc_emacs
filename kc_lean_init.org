@@ -1068,7 +1068,6 @@ The package the replaces emacs built-in help buffer and instead gives better inf
   )
 #+end_src
 ** Ledger mode
-*** Main
 #+begin_src emacs-lisp
 (use-package ledger-mode
   :ensure t
