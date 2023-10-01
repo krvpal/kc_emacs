@@ -290,6 +290,7 @@ auto-capitalize-words variable that has been set using this."
     "og" #'kc-kanban-gtd
     "r" #'evil-redo
     "sd" #'consult-ripgrep
+    "si" #'imenu
     "sq" #'query-replace
     "ss" #'consult-line
     "t"  '(:ignore t :which-key "toggles")
