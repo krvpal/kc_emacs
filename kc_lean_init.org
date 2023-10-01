@@ -2503,6 +2503,7 @@ With a Universal Arg, it will simply kill all instances"
               ))
 
   (add-hook 'python-mode-hook #'python-ts-mode)
+  (add-hook 'python-ts-mode-hook #'display-line-numbers-mode)
 
   )
 #+end_src
