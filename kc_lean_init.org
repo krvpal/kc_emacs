@@ -2346,6 +2346,41 @@ it'll only show file nodes"
 
   )
 #+end_src
+** Outline minor mode
+
+- Can be used in multiple modes, including prog-mode buffers such as python mode etc.
+- See [[https://www.reddit.com/r/emacs/comments/e2u5n9/code_folding_with_outlineminormode/][reddit.com - code folding with outline-mode]] for detailed config info
+
+#+begin_src emacs-lisp
+(use-package outline
+  :defer t
+  :general
+  (:states '(normal)
+           :keymaps 'outline-mode-map
+           "S-<tab>" #'outline-cycle-buffer
+           "TAB" #'outline-cycle
+           "gh" #'outline-up-heading
+           "gj" #'outline-next-visible-heading
+           "gk" #'outline-previous-visible-heading
+           )
+
+  :config
+  (add-hook 'prog-mode-hook 'outline-minor-mode)
+
+  (add-hook 'python-ts-mode-hook
+            (lambda ()
+              (setq-local outline-regexp
+                          (rx
+                           (or
+                            ;; definitions
+                            (group (group (* space)) bow (or "class" "def") eow)
+
+                            ;; decorators
+                            (group (group (* space)) "@")
+                            ))))) 
+
+  )
+#+end_src
 ** Pdf tools
 #+begin_src emacs-lisp
 (use-package pdf-tools
