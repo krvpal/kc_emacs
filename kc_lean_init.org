@@ -2136,6 +2136,22 @@ KC own functions to mark dates in a datetree of a current org buffer and a 'goto
   :delight
   )
 #+end_src
+** Org download
+#+begin_src emacs-lisp
+(use-package org-download
+  :ensure t
+  :commands (org-download-clipboard)
+
+  :config
+  (setq-default org-download-image-dir "./media")
+  (setq-default org-download-heading-lvl nil)
+  (setq org-download-annotate-function (lambda (_link) ""))
+  (setq org-download-display-inline-images nil)
+  (setq org-download-timestamp "%Y-%m-%d_%H-%M-%S_")
+  (setq org-download-backend nil)
+
+  )
+#+end_src
 ** Org duration
 #+begin_src emacs-lisp
 (use-package org-duration
