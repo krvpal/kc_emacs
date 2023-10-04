@@ -212,6 +212,7 @@ auto-capitalize-words variable that has been set using this."
    :keymaps 'override
    "C--" #'text-scale-decrease
    "C-=" #'text-scale-increase
+   "J" #'evil-join
    "gc" 'comment-dwim
    "gs SPC" 'evil-avy-goto-char-timer
    "gsj" 'avy-goto-line-below
@@ -1513,50 +1514,52 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
 #+begin_src emacs-lisp
 :general
 (:states '(normal visual)
-	 :keymaps 'org-mode-map
-	 "SPC ," #'kc-org-consult-goto-headings
-	 "SPC m'" #'kc-org-edit-special
-	 "SPC m," #'org-insert-structure-template
-	 "SPC mC" #'org-ctrl-c-ctrl-c
-	 "SPC mH" #'org-toggle-item
-	 "SPC mI" #'org-id-get-create
-	 "SPC mN" #'org-noter
-	 "SPC mR" #'kc-org-roam-insert
-	 "SPC mV" #'kc-org-download-yank
-	 "SPC ma" #'org-agenda
-	 "SPC mb" #'org-switchb
-	 "SPC md" #'org-decrypt-entry
-	 "SPC mh" #'org-toggle-heading
-	 "SPC mi" #'org-ctrl-c-ret
-	 "SPC mk" #'org-kill-note-or-show-branches
-	 "SPC mll" #'org-insert-link
-	 "SPC mls" #'org-store-link
-	 "SPC mlt" #'org-toggle-link-display
-	 "SPC mm SPC" #'kc-org-emphasize-remove
-	 "SPC mmb" #'kc-org-emphasize-bold
-	 "SPC mmc" #'kc-org-emphasize-code
-	 "SPC mmi" #'kc-org-emphasize-italic
-	 "SPC mmu" #'kc-org-emphasize-underline
-	 "SPC mmv" #'kc-org-emphasize-verbatim
-	 "SPC mn" #'org-narrow-to-subtree
-	 "SPC mo" #'org-open-at-point
-	 "SPC mp" #'org-set-property
-	 "SPC mrc" #'org-roam-capture
-	 "SPC mrdC" #'org-roam-dailies-capture-date
-	 "SPC mrdn" #'org-roam-dailies-goto-next-note
-	 "SPC mrdp" #'org-roam-dailies-goto-previous-note
-	 "SPC mrdt" #'org-roam-dailies-goto-today
-	 "SPC mrf" (lambda () (interactive) (org-roam-dailies-goto-date nil "d"))
-	 "SPC mri" #'kc-org-roam-insert
-	 "SPC msA" #'org-archive-to-archive-sibling
-	 "SPC msI" #'kc-org-insert-subheading
-	 "SPC msa" #'org-archive-subtree
-	 "SPC mv" #'org-cycle-set-visibility-according-to-property
-	 "SPC mw" #'widen
-	 "gJ" #'org-forward-element
-	 "gK" #'org-backward-element
-	 "zK" #'org-kill-note-or-show-branches
-	 )
+	     :keymaps 'org-mode-map
+	     "SPC ," #'kc-org-consult-goto-headings
+	     "SPC m'" #'kc-org-edit-special
+	     "SPC m," #'org-insert-structure-template
+	     "SPC mC" #'org-ctrl-c-ctrl-c
+	     "SPC mD" #'org-deadline
+	     "SPC mH" #'org-toggle-item
+	     "SPC mI" #'org-id-get-create
+	     "SPC mN" #'org-noter
+	     "SPC mR" #'org-reveal
+	     "SPC mS" #'org-schedule
+	     "SPC mV" #'kc-org-download-yank
+	     "SPC ma" #'org-agenda
+	     "SPC mb" #'org-switchb
+	     "SPC md" #'org-decrypt-entry
+	     "SPC mh" #'org-toggle-heading
+	     "SPC mi" #'org-ctrl-c-ret
+	     "SPC mk" #'org-kill-note-or-show-branches
+	     "SPC mll" #'org-insert-link
+	     "SPC mls" #'org-store-link
+	     "SPC mlt" #'org-toggle-link-display
+	     "SPC mm SPC" #'kc-org-emphasize-remove
+	     "SPC mmb" #'kc-org-emphasize-bold
+	     "SPC mmc" #'kc-org-emphasize-code
+	     "SPC mmi" #'kc-org-emphasize-italic
+	     "SPC mmu" #'kc-org-emphasize-underline
+	     "SPC mmv" #'kc-org-emphasize-verbatim
+	     "SPC mn" #'org-narrow-to-subtree
+	     "SPC mo" #'org-open-at-point
+	     "SPC mp" #'org-set-property
+	     "SPC mrc" #'org-roam-capture
+	     "SPC mrdC" #'org-roam-dailies-capture-date
+	     "SPC mrdn" #'org-roam-dailies-goto-next-note
+	     "SPC mrdp" #'org-roam-dailies-goto-previous-note
+	     "SPC mrdt" #'org-roam-dailies-goto-today
+	     "SPC mrf" (lambda () (interactive) (org-roam-dailies-goto-date nil "d"))
+	     "SPC mri" #'kc-org-roam-insert
+	     "SPC msA" #'org-archive-to-archive-sibling
+	     "SPC msI" #'kc-org-insert-subheading
+	     "SPC msa" #'org-archive-subtree
+	     "SPC mv" #'org-cycle-set-visibility-according-to-property
+	     "SPC mw" #'widen
+	     "gJ" #'org-forward-element
+	     "gK" #'org-backward-element
+	     "zK" #'org-kill-note-or-show-branches
+	     )
 (:states '(normal visual)
  :definer 'minor-mode
  :keymaps 'org-src-mode
