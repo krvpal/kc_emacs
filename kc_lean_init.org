@@ -248,9 +248,8 @@ auto-capitalize-words variable that has been set using this."
     "<tab> l" #'persp-next
     "<tab> n" #'persp-switch
     "A" #'backward-sentence
-    "D" #'org-roam-dailies-capture-today
     "E" #'forward-sentence
-    "F" (lambda () (interactive) (org-roam-dailies-goto-date nil "d"))
+    "F" #'kc-org-datetree-goto-date
     "I" #'imenu-list-smart-toggle
     "J" #'kc-jump-to-projects
     "R" #'org-roam-buffer-toggle
