@@ -2452,6 +2452,14 @@ it'll only show file nodes"
 
   )
 #+end_src
+** Project
+#+begin_src emacs-lisp
+(use-package project
+  :config
+  (setq project-vc-merge-submodules nil)
+  )
+
+#+end_src
 ** Python
 #+begin_src emacs-lisp
 (use-package python
