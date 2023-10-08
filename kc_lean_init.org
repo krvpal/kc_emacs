@@ -438,7 +438,9 @@ auto-capitalize-words variable that has been set using this."
   (global-aggressive-indent-mode 1)
   (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
   (add-to-list 'aggressive-indent-excluded-modes 'ess-r-mode)
+  (add-to-list 'aggressive-indent-excluded-modes 'python-ts-mode)
   )
+
 #+end_src
 ** Anzu and evil-anzu
 
@@ -2377,6 +2379,7 @@ It creates a copy of the tanged file in ~temporary-file-directory~.
 (use-package org-src-context
   :after org
   )
+
 #+end_src
 
 ** Outline minor mode
