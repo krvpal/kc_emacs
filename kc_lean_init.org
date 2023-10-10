@@ -2469,6 +2469,17 @@ It creates a copy of the tanged file in ~temporary-file-directory~.
 
   )
 #+end_src
+** Polymode
+#+begin_src emacs-lisp
+(use-package poly-markdown
+  :ensure t
+  :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.md" . poly-markdown-mode))
+  (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown-mode))
+  (add-to-list 'auto-mode-alist '("\\.rmd" . poly-markdown-mode))
+  )
+#+end_src
 ** Project
 #+begin_src emacs-lisp
 (use-package project
