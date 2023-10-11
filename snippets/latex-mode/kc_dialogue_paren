@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: kc_dialogue_paren
+# key: paren
+# --
+/paren{${1:parentheticals/actor directions}}
+$0

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: kc_r_parenthesis
+# key: p
+# --
+($0)

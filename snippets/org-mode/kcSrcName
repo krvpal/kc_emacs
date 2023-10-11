@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: kc - #+NAME
+# key: ns
+# --
+#+NAME: $0

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: kc_html_inline
+# key: ht
+# --
+#+html:$0

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: kcJupyter
+# key: jc
+# --
+#+BEGIN_SRC jupyter-python :session py :results raw :async yes
+`%`$0
+#+END_SRC

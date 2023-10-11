@@ -1,0 +1,5 @@
+# key: fii
+# name: kc_dplyr_filter
+# expand-env: ((yas-wrap-around-region t))
+# --
+dplyr::filter($0)

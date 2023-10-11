@@ -1,0 +1,5 @@
+# key: sek
+# name: sectionkc
+# --
+\section{${1:name}}
+$0

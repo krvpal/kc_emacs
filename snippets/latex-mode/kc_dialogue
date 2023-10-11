@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: kc_dialogue
+# key: dia
+# --
+\begin{dialogue}[${1:expression}]{${2:character name}}
+	${3:dialogue}
+\end{dialogue}
+$0

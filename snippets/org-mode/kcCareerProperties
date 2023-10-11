@@ -1,0 +1,20 @@
+# -*- mode: snippet -*-
+# name: kcCareerProperties
+# key: pr
+# --
+:PROPERTIES: $0
+:Position: ${1:position}
+:PostedDate:
+:LastDate:
+:AppliedDate:
+:RESUME:
+:CoverLetter:
+:PostingUrl: ${2:url}
+:Region: ${3:region}
+:Workplace: ${4:type}
+:Refferals:
+:task:
+:Interview:
+:reject:
+:other:
+:END:

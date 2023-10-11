@@ -1,0 +1,6 @@
+# key: pc
+# name: kcPythonSrc
+# --
+#+BEGIN_SRC python :results output
+`%`$0
+#+END_SRC

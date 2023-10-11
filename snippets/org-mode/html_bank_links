@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: html_bank_links
+# key: htmlb
+# --
+[[file:~/Documents/doc_bank/html_bank/$1][html-b - $2]]$0

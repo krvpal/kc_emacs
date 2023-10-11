@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: kc_R_assign
+# key: aro
+# --
+<- $0

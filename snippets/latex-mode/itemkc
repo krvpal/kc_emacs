@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: itemkc
+# key: i
+# uuid: -
+# condition: (not (save-restriction (widen) (texmathp)))
+# --
+\item ${0:`%`}

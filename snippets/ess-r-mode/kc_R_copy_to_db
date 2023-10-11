@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: kc_R_copy_to_db
+# key: cpp
+# expand-env: ((yas-wrap-around-region t))
+# --
+copy_to(${1:connection object}, ${2:r_table_name}, temporary = ${3:F}, overwrite = ${4:T})$0

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: kc_bi_arrow
+# key: arr
+# --
+=<-->= $0

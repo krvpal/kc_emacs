@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: kc_src_r_with_value
+# key: rv
+# --
+#+begin_src R :results value :colnames yes :rownames yes
+$0
+#+end_src

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: kcJupyterPandoc
+# key: jp
+# --
+#+BEGIN_SRC jupyter-python :session py :results raw :async no :pandoc t :wrap example
+`%`$0
+#+END_SRC

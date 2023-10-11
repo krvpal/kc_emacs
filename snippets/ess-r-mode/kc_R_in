@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: kc_R_in
+# key: in
+# --
+%in% $0

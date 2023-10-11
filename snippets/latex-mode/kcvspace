@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: kcvspace
+# key: vs
+# condition: (not (save-restriction (widen) (texmathp)))
+# --
+\vspace{`%`$1em}$0

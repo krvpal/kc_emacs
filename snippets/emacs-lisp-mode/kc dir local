@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# name: kc dir local
+# key: kcdir
+# --
+;;; Directory Local Variables $0
+;;; For more information see (info "(emacs) Directory Variables")
+
+((nil
+  (eval setq-local org-roam-directory
+        (expand-file-name "./")))
+ (org-mode
+  (org-link-frame-setup
+   (vm . vm-visit-folder-other-frame)
+   (vm-imap . vm-visit-imap-folder-other-frame)
+   (gnus . org-gnus-no-new-news)
+   (file . find-file)
+   (wl . wl-other-frame))))

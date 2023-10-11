@@ -1,0 +1,4 @@
+# key: pdfb
+# name: kcPDFBankLink
+# --
+[[file:~/Documents/doc_bank/pdf_bank/$1][PDF-b - $2]]$0

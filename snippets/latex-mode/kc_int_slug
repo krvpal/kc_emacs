@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: kc_int_slug
+# key: int
+# --
+\intslug[${1:day/night}] {${2:place}}
+$0

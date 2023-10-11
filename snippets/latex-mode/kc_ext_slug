@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: kc_ext_slug
+# key: ext
+# --
+\extslug[${1:day/night}]{${2:place}}
+$0
