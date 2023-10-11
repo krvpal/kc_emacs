@@ -2785,6 +2785,14 @@ Activate and deactivate python virtual environments. Ensure that the minor mode 
 
   )
 #+end_src
+** Treesit
+#+begin_src emacs-lisp
+(use-package treesit
+  :defer t
+  :custom
+  (treesit-font-lock-level 4 "Max level of fontification")
+  )
+#+end_src
 ** Vertico and related
 *** Vertico
 #+begin_src emacs-lisp
