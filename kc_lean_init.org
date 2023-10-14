@@ -77,8 +77,10 @@
   (load-theme 'kc-sentient t)
 
   ;; to be able to simply use 'y' or 'n' instead of 'yes' or 'no'
-  ;; for all such prompts
+  ;; for all such prompts. 'use-short-answers' is additional for some
+  ;; functions which still show yes or no.
   (defalias 'yes-or-no-p 'y-or-n-p)
+  (setopt use-short-answers t)
 
   ;; use escape key globally as keyboard-escape-quit
   ;; seems to be just a precautionary binding, doesn't do much in evil
