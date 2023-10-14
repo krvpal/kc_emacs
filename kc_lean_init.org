@@ -2517,7 +2517,8 @@ It creates a copy of the tanged file in ~temporary-file-directory~.
            "SPC ms" #'python-shell-send-string
            "SPC Lf" #'eglot-format
            "SPC LF" #'eglot-format-buffer
-           "SPC mp" #'run-python
+           "SPC mP" #'run-python
+           "SPC mp" #'kc-python-print-thing-at-point
            )
 
   :preface
@@ -2567,6 +2568,14 @@ With a Universal Arg, it will simply kill all instances"
     (interactive)
     (let* ((obj (python-eldoc--get-symbol-at-point))
            (str (concat "help(" obj ")")))
+      (python-shell-send-string str)
+      ))
+
+  (defun kc-python-print-thing-at-point ()
+    "Wrap and send object at point with print() to the Python shell"
+    (interactive)
+    (let* ((obj (python-eldoc--get-symbol-at-point))
+           (str (concat "print(" obj ")")))
       (python-shell-send-string str)
       ))
 
