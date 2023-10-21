@@ -27,6 +27,7 @@
   
   (global-display-line-numbers-mode -1)
   (setq line-number-display-limit-width 2000)
+  (add-hook 'prog-mode-hook #'display-line-numbers-mode)
 
   (setq ring-bell-function 'ignore)
 
@@ -214,7 +215,6 @@ auto-capitalize-words variable that has been set using this."
    :keymaps 'override
    "C--" #'text-scale-decrease
    "C-=" #'text-scale-increase
-   "J" #'evil-join
    "gc" 'comment-dwim
    "gs SPC" 'evil-avy-goto-char-timer
    "gsj" 'avy-goto-line-below
@@ -347,6 +347,7 @@ auto-capitalize-words variable that has been set using this."
   (:states '(normal visual)
 	       :no-autoload t
 	       "SPC ;" #'evil-avy-goto-line
+           "J" #'evil-join
 	       )
   (:states '(normal visual)
 	       :no-autoload t
@@ -387,9 +388,10 @@ auto-capitalize-words variable that has been set using this."
   (require 'evil-org-agenda)
   (evil-org-set-key-theme '(textobjects insert navigation additional shift todo heading))
   (setq evil-want-C-i-jump nil)         ;to make tab work in terminal
+  (evil-define-minor-mode-key 'normal 'evil-org-mode "J" #'evil-join)
+  (evil-define-minor-mode-key 'normal 'evil-org-mode "O" (lambda () (interactive) (progn (call-interactively #'org-ctrl-c-ret) (evil-insert-state))))
   (evil-define-minor-mode-key 'normal 'evil-org-mode "gj" #'org-next-visible-heading)
   (evil-define-minor-mode-key 'normal 'evil-org-mode "gk" #'org-previous-visible-heading)
-  (evil-define-minor-mode-key 'normal 'evil-org-mode "O" (lambda () (interactive) (progn (call-interactively #'org-ctrl-c-ret) (evil-insert-state))))
   (evil-define-minor-mode-key 'normal 'evil-org-mode (kbd "RET") #'kc-org-dwim-at-point)
   )
 #+end_src
