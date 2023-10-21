@@ -1014,6 +1014,18 @@ The package the replaces emacs built-in help buffer and instead gives better inf
 (use-package hide-mode-line
   :ensure t)
 #+end_src
+** Highlight
+
+Highlight selected region, use ~hlt-highlight~ after selecting a region or line. To remove highlight use ~hlt-unhighlight-region~, if no region is selected it applies for the entire buffer. This is a temporary highlight and is lost when buffer is killed.
+
+#+begin_src emacs-lisp
+(use-package highlight
+  :ensure t
+  :defer t
+  :commands (hlt-highlight)
+  )
+#+end_src
+
 ** Highlight-quoted
 #+begin_src emacs-lisp
 (use-package highlight-quoted
