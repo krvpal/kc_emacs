@@ -2934,7 +2934,7 @@ Activate and deactivate python virtual environments. Ensure that the minor mode 
    :preview-key "M-.")
 
   (setq consult-ripgrep-args
-        "rg --null --line-buffered --no-ignore --hidden --with-filename --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --line-number ."
+        "rg --follow --null --line-buffered --no-ignore --hidden --with-filename --color=never --max-columns=1000 --path-separator /   --smart-case --no-heading --line-number ."
         )
   (when (eq system-type 'darwin)
     (setq consult-locate-args "mdfind"))
