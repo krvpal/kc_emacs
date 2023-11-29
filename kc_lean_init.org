@@ -1576,6 +1576,7 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
 	     "gJ" #'org-forward-element
 	     "gK" #'org-backward-element
 	     "zK" #'org-kill-note-or-show-branches
+         "zO" #'org-fold-show-subtree
 	     )
 (:states '(normal visual)
  :definer 'minor-mode
