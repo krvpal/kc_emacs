@@ -1540,6 +1540,7 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
 	     "SPC mH" #'org-toggle-item
 	     "SPC mI" #'org-id-get-create
 	     "SPC mN" #'org-noter
+	     "SPC mO" #'org-sort
 	     "SPC mR" #'org-reveal
 	     "SPC mS" #'org-schedule
 	     "SPC mV" #'kc-org-download-yank
