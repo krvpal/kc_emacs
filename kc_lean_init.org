@@ -249,6 +249,7 @@ auto-capitalize-words variable that has been set using this."
     "<tab> h" #'persp-prev
     "<tab> l" #'persp-next
     "<tab> n" #'persp-switch
+    "<tab> r" #'persp-rename
     "A" #'backward-sentence
     "E" #'forward-sentence
     "F" #'kc-org-datetree-goto-date
