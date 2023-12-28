@@ -884,6 +884,12 @@ This package adds additional font-lock rules to provide a more colourful Dired b
     (add-hook 'inferior-ess-mode-hook 'kc-ess-inferior-font-lock-fix)
     (setq ess-eval-visibly 'nowait)
     )
+
+  (add-to-list 'display-buffer-alist
+               '("^\\*help\\[R\\].*"
+                 (display-buffer-at-bottom)
+                 (dedicated . t)
+                 ))
   )
 
 #+end_src
