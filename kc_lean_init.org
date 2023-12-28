@@ -745,6 +745,10 @@ This package adds additional font-lock rules to provide a more colourful Dired b
            "n" #'ess-skip-to-next-section
            "p" #'ess-skip-to-previous-section
 	       )
+  (:states '(normal visual)
+           :keymaps 'inferior-ess-r-mode-map
+           "SPC m," #'ess-smart-comma
+           )
 
   :preface
   (defun kc-ess-r-variable-completion ()
