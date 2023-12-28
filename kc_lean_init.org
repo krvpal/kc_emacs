@@ -890,6 +890,27 @@ This package adds additional font-lock rules to provide a more colourful Dired b
 (use-package ess-view-data
   :ensure t
   :commands (ess-view-data-print)
+  :general
+  (:states '(normal visual)
+           :keymaps 'ess-view-data-mode-map
+           "SPC m <tab>" #'ess-view-data-slice
+           "SPC mU" #'ess-view-data-update
+           "SPC mf" #'ess-view-data-filter
+           "SPC mj" #'ess-view-data-goto-next-page
+           "SPC mk" #'ess-view-data-goto-previous-page
+           "SPC ml" #'ess-view-data-unique
+           "SPC mo" #'ess-view-data-sort
+           "SPC mr" #'ess-view-data-reset
+           "SPC mt" #'ess-view-data-toggle-maxprint
+           "SPC mv" #'ess-view-data-summarise
+           "SPC pf" #'ess-view-data-goto-first-page
+           "SPC pl" #'ess-view-data-goto-last-page
+           "q" #'ess-view-data-quit
+           ) 
+  :config
+  (add-to-list 'display-buffer-alist
+               '("^\\*R Data View:.*"
+                 (display-buffer-same-window)))
   )
 #+end_src
 ** Garbage collection magic hack
