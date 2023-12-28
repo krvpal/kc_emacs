@@ -842,7 +842,8 @@ This package adds additional font-lock rules to provide a more colourful Dired b
   (setq comint-move-point-for-output t)
   (setq comint-move-point-for-matching-input 'end-of-line)
 
-  (evil-set-initial-state 'ess-r-help-mode 'motion)
+  (evil-set-initial-state 'ess-r-help-mode 'normal)
+  (evil-set-initial-state 'inferior-ess-r-mode 'normal)
 
 
   (setq ess-R-font-lock-keywords
@@ -879,8 +880,6 @@ This package adds additional font-lock rules to provide a more colourful Dired b
   (add-hook 'ess-mode-hook #'kc-ess-imenu-generic-expression)
   (advice-add 'ess-rdired-refresh :around #'kc-ess-rdired-suppress-refresh-error)
   (advice-add 'ess-complete-object-name :around #'kc-ess-completion-use-style)
-
-  (add-hook 'ess-r-help-mode-hook #'evil-normal-state)
 
   (add-hook 'inferior-ess-mode-hook #'visual-line-mode)
 
