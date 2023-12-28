@@ -1345,7 +1345,6 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
   :init
   ;; using evil-define-minor-mode-key as general will not work in all cases, when multiple minor-modes exist etc.
   (evil-define-minor-mode-key 'normal 'minibuffer-local-map (kbd "<escape>") #'abort-recursive-edit)
-  (evil-define-minor-mode-key 'visual 'minibuffer-local-map (kbd "<escape>") #'abort-recursive-edit)
   
   )
 #+end_src
