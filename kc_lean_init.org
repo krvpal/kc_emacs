@@ -875,6 +875,8 @@ This package adds additional font-lock rules to provide a more colourful Dired b
   (advice-add 'ess-rdired-refresh :around #'kc-ess-rdired-suppress-refresh-error)
   (advice-add 'ess-complete-object-name :around #'kc-ess-completion-use-style)
 
+  (add-hook 'ess-r-help-mode-hook #'evil-normal-state)
+
   (when (eq system-type 'darwin)
     (add-hook 'inferior-ess-mode-hook 'kc-ess-inferior-font-lock-fix)
     (setq ess-eval-visibly 'nowait)
