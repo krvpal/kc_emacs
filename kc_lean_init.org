@@ -907,23 +907,28 @@ This package adds additional font-lock rules to provide a more colourful Dired b
            "SPC pl" #'ess-view-data-goto-last-page
            "q" #'ess-view-data-quit
            )
-  (:states '(normal visual)
-           :keymaps 'ess-view-data-edit-mode-map
-           "SPC m'" #'ess-view-data-do-commit
-           "SPC mk" #'ess-view-data-commit-abort
-           "SPC ma" #'ess-view-data-insert-all-cols
-           "SPC ml" #'ess-view-data-complete-data
-           "SPC mv" #'ess-view-data-insert-all-values
-           "SPC m <tab>" #'ess-view-data-complete-object
-           )
+
   :config
+
   (add-to-list 'display-buffer-alist
                '("^\\*R Data View:.*"
-                 (display-buffer-same-window)))
+                 (display-buffer-same-window)
+                 (dedicated . t)
+                 ))
 
   (add-to-list 'display-buffer-alist
                '("^\\*R Data View Edit:.*"
-                 (display-buffer-at-bottom)))
+                 (display-buffer-at-bottom)
+                 (dedicated . t) ;; this will not leave an empty buffer window behind when quit
+                 ))
+
+  (evil-define-minor-mode-key 'normal 'ess-view-data-edit-mode (kbd "SPC m'") #'ess-view-data-do-commit)
+  (evil-define-minor-mode-key 'normal 'ess-view-data-edit-mode (kbd "SPC mk") #'ess-view-data-commit-abort)
+  (evil-define-minor-mode-key 'normal 'ess-view-data-edit-mode (kbd "SPC ma") #'ess-view-data-insert-all-cols)
+  (evil-define-minor-mode-key 'normal 'ess-view-data-edit-mode (kbd "SPC ml") #'ess-view-data-complete-data)
+  (evil-define-minor-mode-key 'normal 'ess-view-data-edit-mode (kbd "SPC mv") #'ess-view-data-insert-all-values)
+  (evil-define-minor-mode-key 'normal 'ess-view-data-edit-mode (kbd "SPC m <tab>") #'ess-view-data-complete-object)
+
   )
 #+end_src
 ** Garbage collection magic hack
