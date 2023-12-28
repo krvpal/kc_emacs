@@ -731,6 +731,7 @@ This package adds additional font-lock rules to provide a more colourful Dired b
            "SPC mv" #'ess-view-data-print
            "SPC mj" #'ess-eval-paragraph
            "SPC mr" #'ess-eval-region
+           "SPC mb" #'ess-eval-buffer
            "SPC me" #'kc-ess-eval-object-at-point
            "SPC mg" #'kc-ess-glimpse-object-at-point
            "SPC mf" #'ess-switch-process
@@ -876,6 +877,8 @@ This package adds additional font-lock rules to provide a more colourful Dired b
   (advice-add 'ess-complete-object-name :around #'kc-ess-completion-use-style)
 
   (add-hook 'ess-r-help-mode-hook #'evil-normal-state)
+
+  (add-hook 'inferior-ess-mode-hook #'visual-line-mode)
 
   (when (eq system-type 'darwin)
     (add-hook 'inferior-ess-mode-hook 'kc-ess-inferior-font-lock-fix)
