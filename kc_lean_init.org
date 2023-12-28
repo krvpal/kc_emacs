@@ -730,6 +730,7 @@ This package adds additional font-lock rules to provide a more colourful Dired b
 	       :keymaps 'ess-r-mode-map
            "SPC mv" #'ess-view-data-print
            "SPC mj" #'ess-eval-paragraph
+           "SPC ml" #'ess-eval-line
            "SPC mr" #'ess-eval-region
            "SPC mb" #'ess-eval-buffer
            "SPC me" #'kc-ess-eval-object-at-point
