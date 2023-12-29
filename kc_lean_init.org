@@ -737,6 +737,7 @@ This package adds additional font-lock rules to provide a more colourful Dired b
            "SPC mg" #'kc-ess-glimpse-object-at-point
            "SPC mf" #'ess-switch-process
            "SPC mh" #'ess-display-help-on-object
+           "SPC mF" #'kc-r-styler-format-file
            "SPC m'" #'ess-complete-object-name
            "SPC m;" #'kc-ess-r-complete-name
 	       )
@@ -829,6 +830,21 @@ This package adds additional font-lock rules to provide a more colourful Dired b
              (ess-get-words-from-vector "ls(envir = .GlobalEnv)\n")
              nil nil (current-word))))
       (ess-send-string proc (concat "glimpse(" obj ")"))))
+
+  (defun kc-r-styler-format-file ()
+    (interactive)
+    (when (and buffer-file-name (memq major-mode '(ess-r-mode)))
+      (let* ((current-file (if (file-remote-p default-directory)
+                               (tramp-file-local-name (file-truename buffer-file-name))
+                             (princ buffer-file-name)))
+             (cmd (concat "Rscript -e \"styler::style_file('" current-file "')\""))
+             (exit-status (shell-command cmd)))
+        (if (eq exit-status 0)          ; exit status 0 is success, others error
+            (progn
+              (revert-buffer t t)  ; 't' arguments to 'revert-buffer' avoid confirmation and preserve point
+              (message "R Styler formatting file done"))
+          (message "Error in R styler formatting")
+          ))))
 
   (when (eq system-type 'darwin)
     (defun kc-ess-inferior-font-lock-fix ()
