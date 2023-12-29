@@ -2597,6 +2597,12 @@ It creates a copy of the tanged file in ~temporary-file-directory~.
   (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown-mode))
   (add-to-list 'auto-mode-alist '("\\.rmd" . poly-markdown-mode))
   )
+
+;; below package needed for rmarkdown, export ability and rmarkdown templates
+(use-package poly-R
+  :ensure t
+  :defer t
+  )
 #+end_src
 ** Project
 #+begin_src emacs-lisp
