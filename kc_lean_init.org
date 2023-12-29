@@ -1552,9 +1552,10 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
 #+begin_src emacs-lisp
 (org-babel-do-load-languages
  'org-babel-load-languages '(
-			     (emacs-lisp . t)
-			     (ledger . t)
-			     ))
+			                 (emacs-lisp . t)
+			                 (ledger . t)
+                             (R . t)
+			                 ))
 
 #+end_src
 **** Hooks
