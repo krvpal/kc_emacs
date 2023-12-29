@@ -737,7 +737,7 @@ This package adds additional font-lock rules to provide a more colourful Dired b
            "SPC mg" #'kc-ess-glimpse-object-at-point
            "SPC mf" #'ess-switch-process
            "SPC mh" #'ess-display-help-on-object
-           "SPC mF" #'kc-r-styler-format-file
+           "SPC mF" #'kc-r-styler-format-buffer
            "SPC m'" #'ess-complete-object-name
            "SPC m;" #'kc-ess-r-complete-name
 	       )
@@ -848,21 +848,20 @@ This package adds additional font-lock rules to provide a more colourful Dired b
 
   (defun kc-r-styler-format-buffer ()
     (interactive)
-    (when (memq major-mode '(ess-r-mode))
-      (let* ((cmd "Rscript -e \"styler::style_text(readLines('stdin'))\"")
-             (original-point (point))  ; Save current cursor position
-             (kc-r-exit-status))
-        ;; Create a temporary buffer to hold the formatted content
-        (with-temp-buffer
-          (insert-buffer-substring-no-properties (current-buffer))
-          (setq kc-r-exit-status (shell-command-on-region (point-min) (point-max) cmd (current-buffer) t))
-          ;; Check the exit status
-          (if (eq kc-r-exit-status 0)
-              (progn
-                (copy-to-buffer (current-buffer) (point-min) (point-max))
-                (goto-char original-point)  ; Restore cursor position
-                (message "R Styler formatting buffer done"))
-            (message "Error in R Styler formatting"))))))
+    (save-excursion
+      (when (memq major-mode '(ess-r-mode))
+        (let* ((cmd "Rscript -e \"styler::style_text(readLines('stdin'))\"")
+               (kc-r-exit-status))
+          ;; Create a temporary buffer to hold the formatted content
+          (with-temp-buffer
+            (insert-buffer-substring-no-properties (current-buffer))
+            (setq kc-r-exit-status (shell-command-on-region (point-min) (point-max) cmd (current-buffer) t))
+            ;; Check the exit status
+            (if (eq kc-r-exit-status 0)
+                (progn
+                  (copy-to-buffer (current-buffer) (point-min) (point-max))
+                  (message "R Styler formatting buffer done"))
+              (message "Error in R Styler formatting")))))))
 
   (when (eq system-type 'darwin)
     (defun kc-ess-inferior-font-lock-fix ()
