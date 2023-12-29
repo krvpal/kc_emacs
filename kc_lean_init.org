@@ -850,18 +850,22 @@ This package adds additional font-lock rules to provide a more colourful Dired b
     (interactive)
     (save-excursion
       (when (memq major-mode '(ess-r-mode))
-        (let* ((cmd "Rscript -e \"styler::style_text(readLines('stdin'))\"")
+        (let* ((cmd "Rscript -e \"styler::style_text(readLines('stdin'))\" 2>/dev/null")
+               (original-buffer (current-buffer))
                (kc-r-exit-status))
           ;; Create a temporary buffer to hold the formatted content
           (with-temp-buffer
-            (insert-buffer-substring-no-properties (current-buffer))
-            (setq kc-r-exit-status (shell-command-on-region (point-min) (point-max) cmd (current-buffer) t))
+            (insert-buffer-substring-no-properties original-buffer)
+            (setq kc-r-exit-status (shell-command-on-region (point-min) (point-max) cmd t t))
             ;; Check the exit status
             (if (eq kc-r-exit-status 0)
                 (progn
-                  (copy-to-buffer (current-buffer) (point-min) (point-max))
+                  (let ((formatted-content (buffer-string)))
+                    (with-current-buffer original-buffer
+                      (erase-buffer)
+                      (insert formatted-content)))
                   (message "R Styler formatting buffer done"))
-              (message "Error in R Styler formatting")))))))
+              (message "Error in R Styler formatting: %s" kc-r-exit-status)))))))
 
   (when (eq system-type 'darwin)
     (defun kc-ess-inferior-font-lock-fix ()
