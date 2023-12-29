@@ -739,7 +739,6 @@ This package adds additional font-lock rules to provide a more colourful Dired b
            "SPC mh" #'ess-display-help-on-object
            "SPC m'" #'ess-complete-object-name
            "SPC m;" #'kc-ess-r-complete-name
-           "<tab>" #'ess-indent-or-complete
 	       )
   (:states '(normal visual)
 	       :keymaps 'ess-r-help-mode-map
@@ -894,6 +893,13 @@ This package adds additional font-lock rules to provide a more colourful Dired b
                  (display-buffer-at-bottom)
                  (dedicated . t)
                  ))
+
+  (add-hook 'ess-r-mode-hook
+            (lambda ()
+              ;; the regexp considers ## or ### as headings and subheadings and all forms with <- in it
+              (setq-local outline-regexp "\\(^[[:space:]]*#\\{2,3\\} \\)\\|\\(^[[:space:]]*[a-zA-Z0-9_.]+[[:space:]]*<-\\)")
+              ))
+
   )
 
 #+end_src
