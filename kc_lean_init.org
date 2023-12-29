@@ -740,6 +740,8 @@ This package adds additional font-lock rules to provide a more colourful Dired b
            "SPC mF" #'kc-r-styler-format-buffer
            "SPC m'" #'ess-complete-object-name
            "SPC m;" #'kc-ess-r-complete-name
+           "gJ" #'outline-forward-same-level
+           "gK" #'outline-backward-same-level
 	       )
   (:states '(normal visual)
 	       :keymaps 'ess-r-help-mode-map
