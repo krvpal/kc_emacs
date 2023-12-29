@@ -3150,6 +3150,18 @@ Activate and deactivate python virtual environments. Ensure that the minor mode 
   (add-hook 'writeroom-mode-disable-hook #'kc-header)
   )
 #+end_src
+** Yaml mode
+#+begin_src emacs-lisp
+(use-package yaml-mode
+  :ensure t
+  :defer t
+  :init
+
+  (add-to-list 'auto-mode-alist '("\\.yml" . yaml-mode))
+  (add-to-list 'auto-mode-alist '("\\.yaml" . yaml-mode))
+
+  )
+#+end_src
 ** Yasnippet
 #+begin_src emacs-lisp
 (use-package yasnippet
