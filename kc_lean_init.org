@@ -2594,14 +2594,20 @@ It creates a copy of the tanged file in ~temporary-file-directory~.
   :defer t
   :init
   (add-to-list 'auto-mode-alist '("\\.md" . poly-markdown-mode))
-  (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown-mode))
-  (add-to-list 'auto-mode-alist '("\\.rmd" . poly-markdown-mode))
   )
 
 ;; below package needed for rmarkdown, export ability and rmarkdown templates
 (use-package poly-R
   :ensure t
   :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
+  (add-to-list 'auto-mode-alist '("\\.rmd" . poly-markdown+r-mode))
+
+  :config
+
+  (evil-define-minor-mode-key 'normal 'poly-markdown+r-mode (kbd "SPC me") #'polymode-export)
+
   )
 #+end_src
 ** Project
