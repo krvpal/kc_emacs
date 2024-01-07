@@ -881,6 +881,9 @@ This package adds additional font-lock rules to provide a more colourful Dired b
   (setq comint-move-point-for-output t)
   (setq comint-move-point-for-matching-input 'end-of-line)
 
+  ;; the below auto-complete option might be for auto-complete package, might solve R freezes
+  (setopt ess-use-auto-complete nil)
+
   (evil-set-initial-state 'ess-r-help-mode 'normal)
   (evil-set-initial-state 'inferior-ess-r-mode 'normal)
 
@@ -2641,7 +2644,7 @@ It creates a copy of the tanged file in ~temporary-file-directory~.
            "SPC me" #'python-shell-send-statement
            "SPC mr" #'python-shell-send-region
            "SPC mb" #'python-shell-send-buffer
-           "SPC mF" #'python-shell-send-file
+           "SPC mF" #'python-shell-send-defun
            "SPC ms" #'python-shell-send-string
            "SPC Lf" #'eglot-format
            "SPC LF" #'eglot-format-buffer
@@ -2707,6 +2710,15 @@ With a Universal Arg, it will simply kill all instances"
       (python-shell-send-string str)
       ))
 
+  (defun kc-python-df-info-at-point ()
+    "Wrap and send df at point with method info() to the Python shell.
+This is like R glimpse."
+    (interactive)
+    (let* ((obj (python-eldoc--get-symbol-at-point))
+           (str (concat obj".info()")))
+      (python-shell-send-string str)
+      ))
+
   (defun kc-python-black-format-file ()
     "After saving a .py file, run the Black python formatter. Black should be installed on host."
     (interactive)
@@ -2717,13 +2729,14 @@ With a Universal Arg, it will simply kill all instances"
                              (princ buffer-file-name)
                              ))
              (cmd (concat "black " current-file))
-             )
-        (progn
-          (shell-command cmd)
-          (revert-buffer)
-          (message "Python Black formatting file done")
-          )
-        )))
+             (exit-status (shell-command cmd)))
+        (if (eq exit-status 0)          ; exit status 0 is success, others error
+            (progn
+              (revert-buffer)
+              (message "Python Black formatting file done")
+              )
+          (message "Error in Black formatting")
+          ))))
 
   :config
   (add-hook 'inferior-python-mode-hook
