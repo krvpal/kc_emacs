@@ -2632,6 +2632,7 @@ It creates a copy of the tanged file in ~temporary-file-directory~.
            "SPC mD" #'kc-python-dtale-thing-at-point
            "SPC mh" #'kc-python-help-thing-at-point
            "SPC mf" #'kc-python-black-format-file
+           "SPC mi" #'kc-python-df-info-at-point
            "SPC mg" #'flymake-goto-next-error
            "SPC mG" #'flymake-goto-prev-error
            "SPC me" #'python-shell-send-statement
