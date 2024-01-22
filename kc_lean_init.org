@@ -553,10 +553,54 @@ Defined ~kc-add-to-list-multiple~ to not use ~add-to-list~ each time when adding
 (use-package calfw
   :ensure t
   :defer t
+  :general
+  (:states '(normal visual)
+           :keymaps 'cfw:calendar-mode-map
+           "$" #'cfw:navi-goto-week-end-command
+           "." #'cfw:navi-goto-today-command
+           "<" #'cfw:navi-previous-month-command
+           ">" #'cfw:navi-next-month-command
+           "G" #'cfw:navi-goto-last-date-command
+           "S-TAB" #'cfw:navi-prev-item-command
+           "TAB" #'cfw:navi-next-item-command
+           "^" #'cfw:navi-goto-week-begin-command
+           "b" #'cfw:navi-previous-day-command
+           "c" #'cfw:org-capture
+           "f" #'cfw:navi-next-day-command
+           "gD" #'cfw:navi-goto-date-command
+           "gg" #'cfw:navi-goto-first-date-command
+           "h" #'cfw:navi-previous-day-command
+           "j" #'cfw:navi-next-week-command
+           "k" #'cfw:navi-previous-week-command
+           "l" #'cfw:navi-next-day-command
+           "n" #'cfw:navi-next-week-command
+           "o" #'cfw:org-open-agenda-day
+           "p" #'cfw:navi-previous-week-command
+           "q" #'bury-buffer
+           "r" #'cfw:refresh-calendar-buffer
+           "t" #'cfw:navi-goto-today-command
+           "gd" #'cfw:change-view-day
+           "gm" #'cfw:change-view-month
+           "gt" #'cfw:change-view-two-weeks
+           "gw" #'cfw:change-view-week
+           ) 
+  (:states '(normal visual)
+           :keymaps 'cfw:details-mode-map
+           "S-TAB" #'cfw:details-navi-prev-item-command
+           "TAB" #'cfw:details-navi-next-item-command
+           "b" #'cfw:details-navi-prev-command
+           "f" #'cfw:details-navi-next-command
+           "n" #'cfw:details-navi-next-command
+           "o" #'cfw:details-kill-buffer-command
+           "p" #'cfw:details-navi-prev-command
+           "q" #'cfw:details-kill-buffer-command
+           )
 
   :config
   (custom-set-faces
    '(cfw:face-grid ((t :foreground "#009EE1"))))
+
+  (evil-set-initial-state 'cfw:calendar-mode 'normal)
 
   ;; For the calendar provided by `cfw`, make sure it also follows our 
   ;; background color convention for non-file-visiting buffers.
