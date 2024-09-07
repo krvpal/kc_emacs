@@ -2920,6 +2920,11 @@ Activate and deactivate python virtual environments. Ensure that the minor mode 
 					  org-verbatim))
 			  (spell-fu-mode)))
 
+
+  ;; using :delight won't work, as there is no default lighter set by
+  ;; the mode author
+  (add-to-list 'minor-mode-alist '(spell-fu-mode " Spell"))
+
   )
 #+end_src
 ** Tramp 
