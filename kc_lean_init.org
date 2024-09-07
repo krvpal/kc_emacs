@@ -3550,6 +3550,7 @@ whose dimensions may not be fully initialized by the time this is run."
           (goto-char pt)
           )
         (kc-dashboard-resize-h)
+        (evil-local-set-key 'normal (kbd "q") #'ignore)
         (current-buffer)))))
 
 ;; helpers
