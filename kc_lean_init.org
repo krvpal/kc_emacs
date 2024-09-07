@@ -3407,7 +3407,15 @@ library/userland functions"
   )
 #+end_src
 ** Startup splash or dashboard screen
+
 Borrowed from doom Emacs doom-dashboard
+
+- To suppress ~q~ keybinding from running ~quit-window~
+  
+  This mode is derived from ~special-mode~, and for whatever reason it meant that the keybinding ~q~ in normal mode was leading to ~quit-window~. I could not disable this as it was part of some minor mode keymap, one of the ideas was to create my own minor-mode but then this minor mode should be globally enabled so it is first in the order in the alist =minor-mode-map-alist=. It is cumbersome to change a minor-mode's keybinding depending on what major mode is active.
+
+  I had to finally use ~evil-local-set-key~ and set ~q~ to function ~ignore~, which creates a buffer-local keymap and thus overrides any minor-mode keybinding.
+
 #+begin_src emacs-lisp
 (defvar kc-dashboard-name "*kc*"
   "The name to use for the dashboard buffer.")
