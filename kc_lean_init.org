@@ -1204,6 +1204,19 @@ Highlight selected region, use ~hlt-highlight~ after selecting a region or line.
               (ibuffer-switch-to-saved-filter-groups "Default")))
   )
 #+end_src
+** Image mode
+
+#+begin_src emacs-lisp
+(use-package image-mode
+  :general
+  (:states '(normal visual)
+           :keymaps '(image-mode-map)
+           "zi" #'image-increase-size
+           "zo" #'image-decrease-size
+           )
+  )
+#+end_src
+
 ** Imenu list
 #+begin_src emacs-lisp
 (use-package imenu-list
