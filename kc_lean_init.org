@@ -2678,6 +2678,10 @@ It creates a copy of the tanged file in ~temporary-file-directory~.
 (use-package project
   :config
   (setq project-vc-merge-submodules nil)
+
+  ;; below will ensure that any folder with a blank file .project will
+  ;; be considered a project root
+  (setq project-vc-extra-root-markers '(".project"))
   )
 
 #+end_src
