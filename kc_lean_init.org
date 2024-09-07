@@ -270,7 +270,9 @@ auto-capitalize-words variable that has been set using this."
     "bb" #'switch-to-buffer
     "bc" #'clone-indirect-buffer
     "bd" #'bookmark-delete
+    "bh" #'switch-to-prev-buffer
     "bk" #'kill-current-buffer
+    "bl" #'switch-to-next-buffer
     "br" #'revert-buffer
     "bs" #'basic-save-buffer
     "d" #'cfw:open-org-calendar
