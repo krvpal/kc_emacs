@@ -766,6 +766,13 @@ A package to rename or hide both major mode and minor mode names in the mode-lin
   (setq dired-listing-switches "-ahl -v --group-directories-first -A -t") ;; -A hides the . and .. in directory listing
   (setq dired-dwim-target t)
   (setq dired-kill-when-opening-new-dired-buffer t)
+
+  (add-hook 'evil-collection-setup-hook (lambda (_mode keymaps)
+                                          (general-define-key
+                                           :states '(normal visual motion)
+                                           :keymaps 'dired-mode-map
+                                           "gj" #'dired-next-subdir
+                                           "gk" #'dired-prev-subdir)))
   )
 #+end_src
 ** Diredfl
@@ -1556,6 +1563,31 @@ Highlight selected region, use ~hlt-highlight~ after selecting a region or line.
   (add-hook 'ibuffer-mode-hook
             (lambda ()
               (ibuffer-switch-to-saved-filter-groups "Default")))
+  )
+#+end_src
+** Image dired
+
+If you use your custom function to call ~image-dired~ recursively, and then want to selectively delete some subdirs and refresh, just call ~image-dired~ again and choose the same folder again, it will refresh with the new list. Make sure the name of the dired buffer is the same folder that you choose.
+
+#+begin_src emacs-lisp
+(use-package image-dired
+  :general
+  (:states '(normal insert)
+	       :keymaps 'image-dired-thumbnail-mode-map
+	       "J" #'image-dired-display-next
+	       "K" #'image-dired-display-previous
+	       )
+  :preface
+
+  (defun kc-image-dired-all-subdirs ()
+    "If calling from a dired buffer, make sure you select a subfolder
+or go to parent."
+    (interactive)
+    (let ((dired-listing-switches "-alR")
+          (dir (read-directory-name "Select directory")))
+      (image-dired dir))
+    )
+
   )
 #+end_src
 ** Image mode
