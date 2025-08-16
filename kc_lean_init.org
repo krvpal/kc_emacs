@@ -163,6 +163,13 @@
 
   (electric-pair-mode)
 
+  ;; for mac system only - appearance of the title bar
+  (when (memq window-system '(mac ns))
+    (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+    ;; below not needed if using transparent title bar, can also use light
+    ;; (add-to-list 'default-frame-alist '(ns-appearance . dark))
+    )
+
   )
 #+end_src
 ** Custom functions
