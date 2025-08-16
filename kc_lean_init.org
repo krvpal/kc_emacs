@@ -834,7 +834,9 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
          "SPC pa" #'emms-add-playlist-directory-tree
          "SPC po" #'emms-play-playlist
          "SPC pp" #'emms-playlist-mode-go-popup
+         "SPC pr" #'emms-toggle-repeat-playlist
          "SPC ps" #'emms-shuffle
+         "SPC pt" #'emms-toggle-repeat-track
          )
 (:states '(normal visual motion)
          :keymaps 'emms-browser-mode-map
