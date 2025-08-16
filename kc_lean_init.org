@@ -778,17 +778,92 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
   :ensure t
   :general
   (:states '(normal visual)
+           "SPC M" #'emms-smart-browse
+           "SPC P" #'kc-emms-smart-go-to-playlist
+           "SPC ps" #'emms-shuffle
+           )
+  (:states '(normal visual motion)
            :keymaps 'emms-browser-mode-map
            "q" #'emms-browser-bury-buffer
+           "gn" #'emms-browse-by-note
            )
   (:states '(normal visual)
            :keymaps 'emms-playlist-mode-map
-           "q" #'emms-playlist-mode-bury-buffer
+           "q" #'kc-emms-smart-bury-buffer
            )
   (:states '(normal visual)
            :keymaps 'emms-tag-editor-mode-map
            "q" #'quit-window
            )
+
+  :preface
+  ;; to browse-by-note, I needed to modify
+  ;; emms-browser-next-mapping-type and emms-browser-sort-alist
+  ;; and emms-broser-get-face to enable note faces
+  (defun kc-emms-browser-sort-alist (alist type)
+    "Sort ALIST using the sorting function for TYPE."
+    (let ((sort-func
+           (cond
+            ((or
+              (eq type 'info-artist)
+              (eq type 'info-composer)
+              (eq type 'info-performer)
+              (eq type 'info-note)      ; add note here
+              (eq type 'info-year)
+              (eq type 'info-genre))
+             'emms-browser-sort-by-name)
+            ((eq type 'info-album)
+             emms-browser-album-sort-function)
+            ((eq type 'info-title)
+             'emms-browser-sort-by-track)
+            (t (message "Can't sort unknown mapping!")))))
+      (funcall sort-func alist)))
+
+  (defun kc-emms-browser-next-mapping-type (current-mapping)
+    "Return the next sensible mapping.
+Eg. if CURRENT-MAPPING is currently \\='info-artist, return
+ \\='info-album."
+    (cond
+     ((eq current-mapping 'info-artist) 'info-album)
+     ((eq current-mapping 'info-composer) 'info-album)
+     ((eq current-mapping 'info-performer) 'info-album)
+     ((eq current-mapping 'info-album) 'info-title)
+     ((eq current-mapping 'info-genre) 'info-artist)
+     ((eq current-mapping 'info-note) 'info-genre) ; added new for note
+     ((eq current-mapping 'info-year) 'info-artist)))
+
+  (defun kc-emms-browser-get-face (bdata)
+    "Return a suitable face for BDATA."
+    (let* ((type (emms-browser-bdata-type bdata))
+           (name (cond
+                  ((or (eq type 'info-year)
+                       (eq type 'info-genre)) "year/genre")
+                  ((eq type 'info-artist) "artist")
+                  ((eq type 'info-composer) "composer")
+                  ((eq type 'info-performer) "performer")
+                  ((eq type 'info-note) "note") ;; added new for note
+                  ((eq type 'info-album) "album")
+                  ((eq type 'info-title) "track"))))
+      (intern
+       (concat "emms-browser-" name "-face"))))
+
+  (defun kc-emms-smart-bury-buffer ()
+    "Bury playlist buffer with browser buffer if displayed"
+    (interactive)
+    (quit-window nil (get-buffer-window emms-browser-buffer))
+    (delete-window)
+    )
+
+  (defun kc-emms-smart-go-to-playlist ()
+    "Go to current playlist with Browse window next to it"
+    (interactive)
+    (emms-smart-browse)
+    (condition-case nil
+        (select-window (get-buffer-window emms-playlist-buffer))
+      (error (message "No playlist visible"))
+      )
+    )
+
   :config
 
   (require 'emms-setup)
@@ -796,6 +871,8 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
 
   (setq emms-player-list '(emms-player-mpv)
         emms-info-functions '(emms-info-native))
+
+  (setq emms-mode-line-length-limit 10)
 
   (setq emms-source-file-default-directory (expand-file-name "~/Music/beets"))
 
@@ -816,6 +893,13 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
           ("flac" . emms-tag-editor-tag-flac)
           ("opus" . emms-tag-tracktag-file))
         )
+
+  (emms-browser-add-category "note" 'info-note)
+  (emms-browser-make-face "note" "#aaaaff" "#444477" 1.5)
+
+  (advice-add 'emms-browser-sort-alist :override #'kc-emms-browser-sort-alist)
+  (advice-add 'emms-browser-next-mapping-type :override #'kc-emms-browser-next-mapping-type)
+  (advice-add 'emms-browser-get-face :override #'kc-emms-browser-get-face)
 
   )
 #+end_src
