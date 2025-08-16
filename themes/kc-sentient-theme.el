@@ -948,7 +948,7 @@
  '(org-agenda-structure-secondary ((t (:inherit (org-agenda-structure)))))
  '(org-archived ((t (:foreground "#7f7f80"))))
  '(org-block ((t (:extend t :background "black"))))
- '(org-block-begin-line ((t (:extend t :foreground "dim gray" :background nil))))
+ '(org-block-begin-line ((t (:extend t :foreground "dim gray" :background unspecified))))
  '(org-block-end-line ((t (:extend t :inherit (org-block-begin-line)))))
  '(org-checkbox ((t (:inherit (org-todo)))))
  '(org-checkbox-statistics-done ((t (:inherit (org-done)))))
