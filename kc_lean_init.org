@@ -806,7 +806,7 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
   <<emms-kc-functions>>
 
   :config
-
+  <<emms-evil-keybindings>>
   <<emms-config>>
 
   ;; all custom transient functions and keybindings
@@ -833,7 +833,6 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
          "q" #'emms-browser-bury-buffer
          "gh" #'emms-browser-move-up-level
          "b" #'kc-emms-transient-browse-by
-         "s" #'kc-emms-transient-search-by
          )
 (:states '(normal visual)
          :keymaps 'emms-playlist-mode-map
@@ -846,6 +845,24 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
          :keymaps 'emms-tag-editor-mode-map
          "q" #'quit-window
          )
+
+#+end_src
+
+*** Evil define keybindings
+:PROPERTIES:
+:header-args: :tangle no :noweb-ref emms-evil-keybindings
+:END:
+
+Evil collection overrides my keys, so the below is additionally needed for keys already occupied by evil-collection packages (see: [[https://github.com/emacs-evil/evil-collection/issues/214][github issue]]). I could not use ~evil-define-key~, because it seems to bind the keys globally and not just for the keymap I pass it, I need to use ~general-define-key~ instead.
+
+#+begin_src emacs-lisp
+
+(add-hook 'evil-collection-setup-hook (lambda (_mode keymaps)
+                                        (general-define-key
+                                         :states '(normal visual motion)
+                                         :keymaps 'emms-browser-mode-map
+                                         "s" #'kc-emms-transient-search-by)))
+
 #+end_src
 *** Custom functions
 :PROPERTIES:
@@ -968,6 +985,7 @@ Eg. if CURRENT-MAPPING is currently \\='info-artist, return
       emms-info-functions '(emms-info-native))
 
 (setq emms-mode-line-length-limit 10)
+(setq emms-playlist-mode-window-width 50)
 
 (setq emms-source-file-default-directory (expand-file-name "~/Music/beets"))
 
