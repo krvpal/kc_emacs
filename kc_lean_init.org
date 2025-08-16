@@ -1593,6 +1593,7 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
         ))
 
 (kc-add-to-list-multiple 'org-modules '(org-habit org-checklist org-tempo org-id org-crypt org-inlinetask))
+(kc-add-to-list-multiple 'org-export-backends '(taskjuggler md pandoc))
 
 (setq org-todo-keywords '((sequence "TODO(t!)" "READY(r!)" "NEXT(n!)" "WORKING(w!)" "WAIT(W@/!)" "SOMEDAY(s!)" "|" "DONE(d!)" "CANCEL(c@/!)"))
       org-todo-keyword-faces
@@ -1629,6 +1630,50 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
 ;; for plantuml babel support, download plantuml using homebrew on mac
 ;; executable, it also gives a jar if needed
 (setq org-plantuml-exec-mode 'plantuml)
+
+;; don't export org with table of content
+(setq org-export-with-toc nil)
+
+;; while exporting org to markdown, default starting heading level,
+;; useful for when I'm using for Hugo as it won't include iun toc if
+;; it doesn't start with level 2
+(setq org-md-toplevel-hlevel 2) 
+
+(setq org-pandoc-menu-entry 
+      '((52 "to html5 and open." org-pandoc-export-to-html5-and-open)
+        (36 "as html5." org-pandoc-export-as-html5)
+        (53 "to html5-pdf and open." org-pandoc-export-to-html5-pdf-and-open)
+        (37 "to html5-pdf." org-pandoc-export-to-html5-pdf)
+        (61 "to ms-pdf and open." org-pandoc-export-to-ms-pdf-and-open)
+        (45 "to ms-pdf." org-pandoc-export-to-ms-pdf)
+        (98 "to beamer-pdf and open." org-pandoc-export-to-beamer-pdf-and-open)
+        (66 "to beamer-pdf." org-pandoc-export-to-beamer-pdf)
+        (100 "to docbook5 and open." org-pandoc-export-to-docbook5-and-open)
+        (68 "as docbook5." org-pandoc-export-as-docbook5)
+        (103 "to gfm and open." org-pandoc-export-to-gfm-and-open)
+        (71 "as gfm." org-pandoc-export-as-gfm)
+        (104 "to html4 and open." org-pandoc-export-to-html4-and-open)
+        (72 "as html4." org-pandoc-export-as-html4)
+        (106 "to json and open." org-pandoc-export-to-json-and-open)
+        (74 "as json." org-pandoc-export-as-json)
+        (108 "to latex-pdf and open." org-pandoc-export-to-latex-pdf-and-open)
+        (76 "to latex-pdf." org-pandoc-export-to-latex-pdf)
+        (109 "to markdown_mmd and open." org-pandoc-export-to-markdown_mmd-and-open)
+        (77 "as markdown_mmd." org-pandoc-export-as-markdown_mmd)
+        (110 "to native and open." org-pandoc-export-to-native-and-open)
+        (78 "as native." org-pandoc-export-as-native)
+        (111 "to odt and open." org-pandoc-export-to-odt-and-open)
+        (79 "to odt." org-pandoc-export-to-odt)
+        (112 "to pptx and open." org-pandoc-export-to-pptx-and-open)
+        (80 "to pptx." org-pandoc-export-to-pptx)
+        (114 "to rtf and open." org-pandoc-export-to-rtf-and-open)
+        (82 "as rtf." org-pandoc-export-as-rtf)
+        (120 "to docx and open." org-pandoc-export-to-docx-and-open)
+        (88 "to docx." org-pandoc-export-to-docx))
+      )
+
+;; below to shift headings when exporting using pandoc to markdown
+(setq org-pandoc-options-for-markdown_mmd '((shift-heading-level-by . 1)))
 
 #+end_src
 **** Org link parameters
