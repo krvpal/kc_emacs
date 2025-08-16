@@ -1356,6 +1356,9 @@ Highlight selected region, use ~hlt-highlight~ after selecting a region or line.
 
   (evil-set-initial-state 'git-commit-mode 'insert)
 
+  (evil-define-minor-mode-key 'normal 'magit-blob-mode "zj" #'magit-blob-next)
+  (evil-define-minor-mode-key 'normal 'magit-blob-mode "zk" #'magit-blob-previous)
+
   )
 
 
