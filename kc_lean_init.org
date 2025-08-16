@@ -1625,6 +1625,11 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
       org-clock-clocktable-default-properties '(:maxlevel 5 :emphasize t :indent t)
       org-log-done 'note
       )
+
+;; for plantuml babel support, download plantuml using homebrew on mac
+;; executable, it also gives a jar if needed
+(setq org-plantuml-exec-mode 'plantuml)
+
 #+end_src
 **** Org link parameters
 #+begin_src emacs-lisp
@@ -1670,6 +1675,7 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
 			                 (emacs-lisp . t)
 			                 (ledger . t)
                              (R . t)
+                             (plantuml . t)
 			                 ))
 
 #+end_src
@@ -2679,6 +2685,31 @@ It creates a copy of the tanged file in ~temporary-file-directory~.
 
   )
 #+end_src
+** Plantuml
+- Install plantuml using homebrew on mac and then use the executable version
+- Be careful to set the ~plantuml-default-exec-mode~, else it will contact server of plantuml.com
+- ~Plantuml-mode~ is a major mode, using org syntax, to preview - just call ~plantuml-preview~
+
+#+begin_src emacs-lisp
+(use-package plantuml-mode
+  :ensure t
+  :commands (plantuml-mode plantuml-preview)
+  :general
+  (:states '(normal)
+           :keymaps 'org-mode-map
+           "SPC mP" #'plantuml-preview
+           )
+
+  :config
+
+  (setq plantuml-default-exec-mode 'executable)
+
+  ;; disable contacting server for rendering
+  (setq plantuml-server-url nil) 
+
+  )
+#+end_src
+
 ** Polymode
 #+begin_src emacs-lisp
 (use-package poly-markdown
