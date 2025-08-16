@@ -804,15 +804,18 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
            "SPC M" #'emms-smart-browse
            "SPC P" #'kc-emms-smart-go-to-playlist
            "SPC ps" #'emms-shuffle
+           "SPC pp" #'emms-playlist-mode-go-popup
            )
   (:states '(normal visual motion)
            :keymaps 'emms-browser-mode-map
            "q" #'emms-browser-bury-buffer
-           "gn" #'emms-browse-by-note
+           "gh" #'emms-browser-move-up-level
+           "b" #'kc-emms-transient-browse-by
            )
   (:states '(normal visual)
            :keymaps 'emms-playlist-mode-map
            "q" #'kc-emms-smart-bury-buffer
+           "s" #'kc-emms-transient-playlist-sort
            )
   (:states '(normal visual)
            :keymaps 'emms-tag-editor-mode-map
@@ -887,6 +890,27 @@ Eg. if CURRENT-MAPPING is currently \\='info-artist, return
       )
     )
 
+  (defun kc-emms-info-track-description (track)
+    "KC function to Return a shorter description of TRACK."
+    (let ((artist    (emms-track-get track 'info-artist))
+	      (album     (emms-track-get track 'info-album))
+	      (composer  (emms-track-get track 'info-composer))
+          (title     (emms-track-get track 'info-title)))
+      (cond
+       ;; ((and composer artist title album)
+       ;;  (concat (if (string= composer artist)
+	   ;;              artist
+	   ;;            (concat  artist " - " composer))
+	   ;;          " - " album " - " title))
+       ((and artist title album)
+        (concat artist " - " title " [" album "]"))
+       ((and artist title)
+        (concat artist " - " title))
+       (title
+        title)
+       (t
+        (emms-track-simple-description track)))))
+
   :config
 
   (require 'emms-setup)
@@ -917,8 +941,56 @@ Eg. if CURRENT-MAPPING is currently \\='info-artist, return
           ("opus" . emms-tag-tracktag-file))
         )
 
+  ;; to show only shorter track info in playlist, artist, title [album]
+  (setq emms-track-description-function 'kc-emms-info-track-description)
+
   (emms-browser-add-category "note" 'info-note)
   (emms-browser-make-face "note" "#aaaaff" "#444477" 1.5)
+
+  (transient-define-prefix kc-emms-transient-playlist-sort ()
+    "KC Emms sort playlist transient insert with several options"
+    [:class transient-columns
+            ["Sort by"
+             ("n" "Natural order" emms-playlist-sort-by-natural-order)
+             ("a" "Artist" emms-playlist-sort-by-info-artist)
+             ("l" "Last played" emms-playlist-sort-by-last-played)
+             ("c" "Play count" emms-playlist-sort-by-play-count)
+             ("t" "Title" emms-playlist-sort-by-info-title)
+             ("y" "Year" emms-playlist-sort-by-info-year)
+             ]
+            [""
+             ("N" "Name" emms-playlist-sort-by-name)
+             ("A" "Album" emms-playlist-sort-by-info-album)
+             ("L" "List" emms-playlist-sort-by-list)
+             ("C" "Notes or comments" emms-playlist-sort-by-info-note)
+             ("T" "File time" emms-playlist-sort-by-file-mtime)
+             ]]
+    [:class transient-columns
+            ["Shuffle"
+             ("s" "Shuffle" emms-playlist-shuffle)
+             ]
+            ["Quit"
+             ("q" "Quit" transient-quit-one)]
+            ]
+    )
+
+  (transient-define-prefix kc-emms-transient-browse-by ()
+    "KC Emms sort playlist transient insert with several options"
+    [:class transient-columns
+            ["Browse by"
+             ("a" "Artist" emms-browse-by-artist)
+             ("g" "Genre" emms-browse-by-genre)
+             ("n" "Notes" emms-browse-by-note)
+             ("y" "Year" emms-browse-by-year)
+             ]
+            [""
+             ("A" "Album" emms-browse-by-album)
+             ]]
+    [:class transient-columns
+            ["Quit"
+             ("q" "Quit" transient-quit-one)]
+            ]
+    )
 
   (advice-add 'emms-browser-sort-alist :override #'kc-emms-browser-sort-alist)
   (advice-add 'emms-browser-next-mapping-type :override #'kc-emms-browser-next-mapping-type)
