@@ -2790,6 +2790,19 @@ KC own functions to mark dates in a datetree of a current org buffer and a 'goto
   (setq org-duration-format '(("d") ("h") ("min")))
   )
 #+end_src
+** Org habit stats
+
+Inspired by loop habits - the android open source app I've used
+
+- [[https://github.com/ml729/org-habit-stats?tab=readme-ov-file][Github page]]
+
+#+begin_src emacs-lisp
+(use-package org-habit-stats
+  :ensure t
+  :after org
+  )
+#+end_src
+
 ** Org indent
 #+begin_src emacs-lisp
 (use-package org-indent
