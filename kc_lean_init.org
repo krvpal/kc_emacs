@@ -1559,7 +1559,7 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
 (setq org-crypt-key "emacs@gnu.org")
 
 (setq org-emphasis-alist
-      '(("*" (bold :foreground "brown" :background "orange"))
+      '(("*" (bold :foreground "darkred" :background "orange"))
         ("/" (italic :foreground "gold"))
         ("_" (bold :foreground "red"))
         ("=" org-verbatim verbatim)
