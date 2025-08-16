@@ -474,6 +474,28 @@ This package highlights the number of current-match and total-matches for variou
   :after (evil anzu)
   )
 #+end_src
+** Appt
+
+- Emacs native and in-built way to notifications within Emacs by a pop up buffer/window. See my [[id:4BB12963-EA74-466F-8386-D4FE2ADC23EF][docs]].
+
+#+begin_src emacs-lisp
+(use-package appt
+  :after org
+  :config
+
+  (setq appt-message-warning-time 60) ;; start warning 60 minutes before appointments
+  (setq appt-display-interval 1) ;; display warning every minute
+  (appt-activate t) ;; starts the appt "mode"
+
+  (setq appt-display-duration 1200)
+
+  ;; `t' here means "clear whatever is in appt before adding"
+  (org-agenda-to-appt t)
+
+
+  )
+#+end_src
+
 ** Auto capitalize
 
 Defined ~kc-add-to-list-multiple~ to not use ~add-to-list~ each time when adding every word. Using ~dolist~ iterates over the list and performs the function.
