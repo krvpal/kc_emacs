@@ -420,7 +420,7 @@ auto-capitalize-words variable that has been set using this."
   :config
   ;; Split window sensibly, only split side-by-side. See
   ;; "split-window-preferred-function"
-  (setq split-width-threshold 0)
+  (setq split-width-threshold 90)        ; this interferes with image-dired when viewing files
   (setq split-height-threshold nil)
 
   )
