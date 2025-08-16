@@ -2157,6 +2157,7 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
 	     "SPC ma" #'org-agenda
 	     "SPC mb" #'org-switchb
 	     "SPC md" #'org-decrypt-entry
+	     "SPC mf" #'kc-org-toggle-visible-level-subtrees
 	     "SPC mh" #'org-toggle-heading
 	     "SPC mi" #'org-ctrl-c-ret
 	     "SPC mk" #'org-kill-note-or-show-branches
@@ -2632,6 +2633,32 @@ KC own functions to mark dates in a datetree of a current org buffer and a 'goto
       (message "Not an org buffer"))))
 
 
+#+end_src
+**** Org expand show or hide sparse tree
+#+begin_src emacs-lisp
+(defun kc-org-toggle-visible-level-subtrees (prefix level)
+  "Used best together with org-sparse-tree. Toggle visibility of direct children for all visible headings at LEVEL.
+With a universal argument (C-u), this command hides the subtrees (folds them).
+Without an argument, it expands the subtrees to show direct children."
+  (interactive "P\nnHeading Level: ")
+  (when (and (derived-mode-p 'org-mode) (> level 0))
+    (save-excursion
+      (goto-char (point-min))
+      ;; The core loop remains the same, ensuring it is robust.
+      (while (and (not (eobp)) (org-next-visible-heading 1))
+        (when (= (org-current-level) level)
+          ;; Conditionally call show or hide based on the prefix argument.
+          (if prefix
+              (org-fold-hide-subtree)
+            (org-fold-show-subtree))
+          ;; Jump past the current subtree to prevent infinite loops.
+          (org-end-of-subtree))))
+    ;; Provide simple, clear feedback in the echo area.
+    (message (if prefix
+                 "Folded matching subtrees."
+               "Expanded matching subtrees."))
+    )
+  )
 #+end_src
 ** Org agenda
 #+begin_src emacs-lisp
