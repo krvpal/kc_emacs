@@ -1567,7 +1567,9 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
         ("+" (italic :foreground "gray20"))
         ))
 
-(setq org-blank-before-new-entry nil)
+;; (setq org-blank-before-new-entry nil)
+(setq org-blank-before-new-entry '((heading . auto)
+                                   (plain-list-item . auto)))
 (setq org-insert-heading-respect-content t)
 (setq org-auto-align-tags nil)
 (setq org-tags-column 0) ;; needed as evil-org-delete tries to align no matter auto-align value
