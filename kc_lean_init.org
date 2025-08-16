@@ -800,205 +800,280 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
 (use-package emms
   :ensure t
   :general
-  (:states '(normal visual)
-           "SPC M" #'emms-smart-browse
-           "SPC P" #'kc-emms-smart-go-to-playlist
-           "SPC ps" #'emms-shuffle
-           "SPC pp" #'emms-playlist-mode-go-popup
-           )
-  (:states '(normal visual motion)
-           :keymaps 'emms-browser-mode-map
-           "q" #'emms-browser-bury-buffer
-           "gh" #'emms-browser-move-up-level
-           "b" #'kc-emms-transient-browse-by
-           )
-  (:states '(normal visual)
-           :keymaps 'emms-playlist-mode-map
-           "q" #'kc-emms-smart-bury-buffer
-           "s" #'kc-emms-transient-playlist-sort
-           )
-  (:states '(normal visual)
-           :keymaps 'emms-tag-editor-mode-map
-           "q" #'quit-window
-           )
+  <<emms-keybindings>>
 
   :preface
-  ;; to browse-by-note, I needed to modify
-  ;; emms-browser-next-mapping-type and emms-browser-sort-alist
-  ;; and emms-broser-get-face to enable note faces
-  (defun kc-emms-browser-sort-alist (alist type)
-    "Sort ALIST using the sorting function for TYPE."
-    (let ((sort-func
-           (cond
-            ((or
-              (eq type 'info-artist)
-              (eq type 'info-composer)
-              (eq type 'info-performer)
-              (eq type 'info-note)      ; add note here
-              (eq type 'info-year)
-              (eq type 'info-genre))
-             'emms-browser-sort-by-name)
-            ((eq type 'info-album)
-             emms-browser-album-sort-function)
-            ((eq type 'info-title)
-             'emms-browser-sort-by-track)
-            (t (message "Can't sort unknown mapping!")))))
-      (funcall sort-func alist)))
-
-  (defun kc-emms-browser-next-mapping-type (current-mapping)
-    "Return the next sensible mapping.
-Eg. if CURRENT-MAPPING is currently \\='info-artist, return
- \\='info-album."
-    (cond
-     ((eq current-mapping 'info-artist) 'info-album)
-     ((eq current-mapping 'info-composer) 'info-album)
-     ((eq current-mapping 'info-performer) 'info-album)
-     ((eq current-mapping 'info-album) 'info-title)
-     ((eq current-mapping 'info-genre) 'info-artist)
-     ((eq current-mapping 'info-note) 'info-genre) ; added new for note
-     ((eq current-mapping 'info-year) 'info-artist)))
-
-  (defun kc-emms-browser-get-face (bdata)
-    "Return a suitable face for BDATA."
-    (let* ((type (emms-browser-bdata-type bdata))
-           (name (cond
-                  ((or (eq type 'info-year)
-                       (eq type 'info-genre)) "year/genre")
-                  ((eq type 'info-artist) "artist")
-                  ((eq type 'info-composer) "composer")
-                  ((eq type 'info-performer) "performer")
-                  ((eq type 'info-note) "note") ;; added new for note
-                  ((eq type 'info-album) "album")
-                  ((eq type 'info-title) "track"))))
-      (intern
-       (concat "emms-browser-" name "-face"))))
-
-  (defun kc-emms-smart-bury-buffer ()
-    "Bury playlist buffer with browser buffer if displayed"
-    (interactive)
-    (quit-window nil (get-buffer-window emms-browser-buffer))
-    (delete-window)
-    )
-
-  (defun kc-emms-smart-go-to-playlist ()
-    "Go to current playlist with Browse window next to it"
-    (interactive)
-    (emms-smart-browse)
-    (condition-case nil
-        (select-window (get-buffer-window emms-playlist-buffer))
-      (error (message "No playlist visible"))
-      )
-    )
-
-  (defun kc-emms-info-track-description (track)
-    "KC function to Return a shorter description of TRACK."
-    (let ((artist    (emms-track-get track 'info-artist))
-	      (album     (emms-track-get track 'info-album))
-	      (composer  (emms-track-get track 'info-composer))
-          (title     (emms-track-get track 'info-title)))
-      (cond
-       ;; ((and composer artist title album)
-       ;;  (concat (if (string= composer artist)
-	   ;;              artist
-	   ;;            (concat  artist " - " composer))
-	   ;;          " - " album " - " title))
-       ((and artist title album)
-        (concat artist " - " title " [" album "]"))
-       ((and artist title)
-        (concat artist " - " title))
-       (title
-        title)
-       (t
-        (emms-track-simple-description track)))))
+  <<emms-kc-functions>>
 
   :config
 
-  (require 'emms-setup)
-  (emms-all)
+  <<emms-config>>
 
-  (setq emms-player-list '(emms-player-mpv)
-        emms-info-functions '(emms-info-native))
-
-  (setq emms-mode-line-length-limit 10)
-
-  (setq emms-source-file-default-directory (expand-file-name "~/Music/beets"))
-
-  (setq emms-tag-editor-tagfile-functions
-        '(("mp3" "id3v2" ;; this is for macos
-           ((info-artist . "-a")
-            (info-title . "-t")
-            (info-album . "-A")
-            (info-tracknumber . "-T")
-            (info-year . "-y")
-            (info-genre . "-g")
-            (info-note . "-c")
-            (info-albumartist . "--TPE2")
-            (info-composer . "--TCOM")
-            (info-performer . "--TOPE")
-            (info-date . "--TDAT")))
-          ("ogg" . emms-tag-editor-tag-ogg)
-          ("flac" . emms-tag-editor-tag-flac)
-          ("opus" . emms-tag-tracktag-file))
-        )
-
-  ;; to show only shorter track info in playlist, artist, title [album]
-  (setq emms-track-description-function 'kc-emms-info-track-description)
-
-  (emms-browser-add-category "note" 'info-note)
-  (emms-browser-make-face "note" "#aaaaff" "#444477" 1.5)
-
-  (transient-define-prefix kc-emms-transient-playlist-sort ()
-    "KC Emms sort playlist transient insert with several options"
-    [:class transient-columns
-            ["Sort by"
-             ("n" "Natural order" emms-playlist-sort-by-natural-order)
-             ("a" "Artist" emms-playlist-sort-by-info-artist)
-             ("l" "Last played" emms-playlist-sort-by-last-played)
-             ("c" "Play count" emms-playlist-sort-by-play-count)
-             ("t" "Title" emms-playlist-sort-by-info-title)
-             ("y" "Year" emms-playlist-sort-by-info-year)
-             ]
-            [""
-             ("N" "Name" emms-playlist-sort-by-name)
-             ("A" "Album" emms-playlist-sort-by-info-album)
-             ("L" "List" emms-playlist-sort-by-list)
-             ("C" "Notes or comments" emms-playlist-sort-by-info-note)
-             ("T" "File time" emms-playlist-sort-by-file-mtime)
-             ]]
-    [:class transient-columns
-            ["Shuffle"
-             ("s" "Shuffle" emms-playlist-shuffle)
-             ]
-            ["Quit"
-             ("q" "Quit" transient-quit-one)]
-            ]
-    )
-
-  (transient-define-prefix kc-emms-transient-browse-by ()
-    "KC Emms sort playlist transient insert with several options"
-    [:class transient-columns
-            ["Browse by"
-             ("a" "Artist" emms-browse-by-artist)
-             ("g" "Genre" emms-browse-by-genre)
-             ("n" "Notes" emms-browse-by-note)
-             ("y" "Year" emms-browse-by-year)
-             ]
-            [""
-             ("A" "Album" emms-browse-by-album)
-             ]]
-    [:class transient-columns
-            ["Quit"
-             ("q" "Quit" transient-quit-one)]
-            ]
-    )
-
-  (advice-add 'emms-browser-sort-alist :override #'kc-emms-browser-sort-alist)
-  (advice-add 'emms-browser-next-mapping-type :override #'kc-emms-browser-next-mapping-type)
-  (advice-add 'emms-browser-get-face :override #'kc-emms-browser-get-face)
+  ;; all custom transient functions and keybindings
+  <<emms-transients>>
 
   )
 #+end_src
 
+*** Keybindings
+:PROPERTIES:
+:header-args: :tangle no :noweb-ref emms-keybindings
+:END:
+#+begin_src emacs-lisp
+
+(:states '(normal visual)
+         "SPC M" #'emms-smart-browse
+         "SPC P" #'kc-emms-smart-go-to-playlist
+         "SPC ps" #'emms-shuffle
+         "SPC pp" #'emms-playlist-mode-go-popup
+         "SPC pa" #'emms-add-playlist-directory-tree
+         )
+(:states '(normal visual motion)
+         :keymaps 'emms-browser-mode-map
+         "q" #'emms-browser-bury-buffer
+         "gh" #'emms-browser-move-up-level
+         "b" #'kc-emms-transient-browse-by
+         "s" #'kc-emms-transient-search-by
+         )
+(:states '(normal visual)
+         :keymaps 'emms-playlist-mode-map
+         "q" #'kc-emms-smart-bury-buffer
+         "s" #'kc-emms-transient-playlist-sort
+         "M-k" #'emms-playlist-mode-shift-track-up
+         "M-j" #'emms-playlist-mode-shift-track-down
+         )
+(:states '(normal visual)
+         :keymaps 'emms-tag-editor-mode-map
+         "q" #'quit-window
+         )
+#+end_src
+*** Custom functions
+:PROPERTIES:
+:header-args: :tangle no :noweb-ref emms-kc-functions
+:END:
+**** Browser custom functions
+
+To be able to browse by 'note', I needed to modify existing functions and do ~advice-add~ to override them.
+
+#+begin_src emacs-lisp
+
+;; to browse-by-note, I needed to modify
+;; emms-browser-next-mapping-type and emms-browser-sort-alist
+;; and emms-broser-get-face to enable note faces
+(defun kc-emms-browser-sort-alist (alist type)
+  "Sort ALIST using the sorting function for TYPE."
+  (let ((sort-func
+         (cond
+          ((or
+            (eq type 'info-artist)
+            (eq type 'info-composer)
+            (eq type 'info-performer)
+            (eq type 'info-note)      ; add note here
+            (eq type 'info-year)
+            (eq type 'info-genre))
+           'emms-browser-sort-by-name)
+          ((eq type 'info-album)
+           emms-browser-album-sort-function)
+          ((eq type 'info-title)
+           'emms-browser-sort-by-track)
+          (t (message "Can't sort unknown mapping!")))))
+    (funcall sort-func alist)))
+
+(defun kc-emms-browser-next-mapping-type (current-mapping)
+  "Return the next sensible mapping.
+Eg. if CURRENT-MAPPING is currently \\='info-artist, return
+ \\='info-album."
+  (cond
+   ((eq current-mapping 'info-artist) 'info-album)
+   ((eq current-mapping 'info-composer) 'info-album)
+   ((eq current-mapping 'info-performer) 'info-album)
+   ((eq current-mapping 'info-album) 'info-title)
+   ((eq current-mapping 'info-genre) 'info-artist)
+   ((eq current-mapping 'info-note) 'info-genre) ; added new for note
+   ((eq current-mapping 'info-year) 'info-artist)))
+
+(defun kc-emms-browser-get-face (bdata)
+  "Return a suitable face for BDATA."
+  (let* ((type (emms-browser-bdata-type bdata))
+         (name (cond
+                ((or (eq type 'info-year)
+                     (eq type 'info-genre)) "year/genre")
+                ((eq type 'info-artist) "artist")
+                ((eq type 'info-composer) "composer")
+                ((eq type 'info-performer) "performer")
+                ((eq type 'info-note) "note") ;; added new for note
+                ((eq type 'info-album) "album")
+                ((eq type 'info-title) "track"))))
+    (intern
+     (concat "emms-browser-" name "-face"))))
+
+#+end_src
+**** Smart bury and go to playlist
+#+begin_src emacs-lisp
+
+(defun kc-emms-smart-bury-buffer ()
+  "Bury playlist buffer with browser buffer if displayed"
+  (interactive)
+  (quit-window nil (get-buffer-window emms-browser-buffer))
+  (delete-window)
+  )
+
+(defun kc-emms-smart-go-to-playlist ()
+  "Go to current playlist with Browse window next to it"
+  (interactive)
+  (emms-smart-browse)
+  (condition-case nil
+      (select-window (get-buffer-window emms-playlist-buffer))
+    (error (message "No playlist visible"))
+    )
+  )
+
+#+end_src
+**** Function to shorten track description in playlist buffer
+#+begin_src emacs-lisp
+
+(defun kc-emms-info-track-description (track)
+  "KC function to Return a shorter description of TRACK."
+  (let ((artist    (emms-track-get track 'info-artist))
+	    (album     (emms-track-get track 'info-album))
+	    (composer  (emms-track-get track 'info-composer))
+        (title     (emms-track-get track 'info-title)))
+    (cond
+     ;; ((and composer artist title album)
+     ;;  (concat (if (string= composer artist)
+	 ;;              artist
+	 ;;            (concat  artist " - " composer))
+	 ;;          " - " album " - " title))
+     ((and artist title album)
+      (concat artist " - " title " [" album "]"))
+     ((and artist title)
+      (concat artist " - " title))
+     (title
+      title)
+     (t
+      (emms-track-simple-description track)))))
+
+#+end_src
+
+*** Config
+:PROPERTIES:
+:header-args: :tangle no :noweb-ref emms-config
+:END:
+#+begin_src emacs-lisp
+
+(require 'emms-setup)
+(emms-all)
+
+(setq emms-player-list '(emms-player-mpv)
+      emms-info-functions '(emms-info-native))
+
+(setq emms-mode-line-length-limit 10)
+
+(setq emms-source-file-default-directory (expand-file-name "~/Music/beets"))
+
+(setq emms-tag-editor-tagfile-functions
+      '(("mp3" "id3v2" ;; this is for macos
+         ((info-artist . "-a")
+          (info-title . "-t")
+          (info-album . "-A")
+          (info-tracknumber . "-T")
+          (info-year . "-y")
+          (info-genre . "-g")
+          (info-note . "-c")
+          (info-albumartist . "--TPE2")
+          (info-composer . "--TCOM")
+          (info-performer . "--TOPE")
+          (info-date . "--TDAT")))
+        ("ogg" . emms-tag-editor-tag-ogg)
+        ("flac" . emms-tag-editor-tag-flac)
+        ("opus" . emms-tag-tracktag-file))
+      )
+
+;; to show only shorter track info in playlist, artist, title [album]
+(setq emms-track-description-function 'kc-emms-info-track-description)
+
+(emms-browser-add-category "note" 'info-note)
+(emms-browser-make-face "note" "#aaaaff" "#444477" 1.5)
+
+(advice-add 'emms-browser-sort-alist :override #'kc-emms-browser-sort-alist)
+(advice-add 'emms-browser-next-mapping-type :override #'kc-emms-browser-next-mapping-type)
+(advice-add 'emms-browser-get-face :override #'kc-emms-browser-get-face)
+
+#+end_src
+*** Transients 
+:PROPERTIES:
+:header-args: :tangle no :noweb-ref emms-transients
+:END:
+
+#+begin_src emacs-lisp
+
+(transient-define-prefix kc-emms-transient-playlist-sort ()
+  "KC Emms sort playlist transient insert with several options"
+  [:class transient-columns
+          ["Sort by"
+           ("n" "Natural order" emms-playlist-sort-by-natural-order)
+           ("a" "Artist" emms-playlist-sort-by-info-artist)
+           ("l" "Last played" emms-playlist-sort-by-last-played)
+           ("c" "Play count" emms-playlist-sort-by-play-count)
+           ("t" "Title" emms-playlist-sort-by-info-title)
+           ("y" "Year" emms-playlist-sort-by-info-year)
+           ]
+          [""
+           ("N" "Name" emms-playlist-sort-by-name)
+           ("A" "Album" emms-playlist-sort-by-info-album)
+           ("L" "List" emms-playlist-sort-by-list)
+           ("C" "Notes or comments" emms-playlist-sort-by-info-note)
+           ("T" "File time" emms-playlist-sort-by-file-mtime)
+           ]]
+  [:class transient-columns
+          ["Shuffle"
+           ("s" "Shuffle" emms-playlist-shuffle)
+           ]
+          ["Uniq - remove duplicates"
+           ("u" "Uniq" emms-uniq)
+           ]
+          ["Quit"
+           ("q" "Quit" transient-quit-one)]
+          ]
+  )
+
+(transient-define-prefix kc-emms-transient-browse-by ()
+  "KC Emms sort playlist transient insert with several options"
+  [:class transient-columns
+          ["Browse by"
+           ("a" "Artist" emms-browse-by-artist)
+           ("g" "Genre" emms-browse-by-genre)
+           ("n" "Notes" emms-browse-by-note)
+           ("y" "Year" emms-browse-by-year)
+           ]
+          [""
+           ("A" "Album" emms-browse-by-album)
+           ]]
+  [:class transient-columns
+          ["Quit"
+           ("q" "Quit" transient-quit-one)]
+          ]
+  )
+
+(transient-define-prefix kc-emms-transient-search-by ()
+  "KC Emms sort playlist transient insert with several options"
+  [:class transient-columns
+          ["Search by"
+           ("a" "Artist" emms-browser-search-by-artist)
+           ("n" "Names" emms-browser-search-by-names)
+           ("t" "Title" emms-browser-search-by-title)
+           ("p" "Performer" emms-browser-search-by-performer)
+           ("c" "Composer" emms-browser-search-by-composer)
+           ]
+          [""
+           ("A" "Album" emms-browser-search-by-album)
+           ]]
+  [:class transient-columns
+          ["Quit"
+           ("q" "Quit" transient-quit-one)]
+          ]
+  )
+#+end_src
 ** Ess
 - To make the 'comint' buffer scroll to bottom see [[https://kieranhealy.org/blog/archives/2009/10/12/make-shift-enter-do-a-lot-in-ess/][kieranhealy.org blog to set 'comint-scroll-to-bottom-on-output']].
 - Kc wrote own function as a hack to enable 'variable' or column names auto-completion. Type the data-frame name and '$', call the ~kc-ess-r-complete-name~ function after that. Make sure that if it is org-src-edit buffer, that it is associated with an ESS process by using ~C-c C-s~.
