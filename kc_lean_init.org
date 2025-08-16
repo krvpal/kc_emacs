@@ -768,6 +768,58 @@ This package adds additional font-lock rules to provide a more colourful Dired b
 
   )
 #+end_src
+
+** EMMS
+
+My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
+
+#+begin_src emacs-lisp
+(use-package emms
+  :ensure t
+  :general
+  (:states '(normal visual)
+           :keymaps 'emms-browser-mode-map
+           "q" #'emms-browser-bury-buffer
+           )
+  (:states '(normal visual)
+           :keymaps 'emms-playlist-mode-map
+           "q" #'emms-playlist-mode-bury-buffer
+           )
+  (:states '(normal visual)
+           :keymaps 'emms-tag-editor-mode-map
+           "q" #'quit-window
+           )
+  :config
+
+  (require 'emms-setup)
+  (emms-all)
+
+  (setq emms-player-list '(emms-player-mpv)
+        emms-info-functions '(emms-info-native))
+
+  (setq emms-source-file-default-directory (expand-file-name "~/Music/beets"))
+
+  (setq emms-tag-editor-tagfile-functions
+        '(("mp3" "id3v2" ;; this is for macos
+           ((info-artist . "-a")
+            (info-title . "-t")
+            (info-album . "-A")
+            (info-tracknumber . "-T")
+            (info-year . "-y")
+            (info-genre . "-g")
+            (info-note . "-c")
+            (info-albumartist . "--TPE2")
+            (info-composer . "--TCOM")
+            (info-performer . "--TOPE")
+            (info-date . "--TDAT")))
+          ("ogg" . emms-tag-editor-tag-ogg)
+          ("flac" . emms-tag-editor-tag-flac)
+          ("opus" . emms-tag-tracktag-file))
+        )
+
+  )
+#+end_src
+
 ** Ess
 - To make the 'comint' buffer scroll to bottom see [[https://kieranhealy.org/blog/archives/2009/10/12/make-shift-enter-do-a-lot-in-ess/][kieranhealy.org blog to set 'comint-scroll-to-bottom-on-output']].
 - Kc wrote own function as a hack to enable 'variable' or column names auto-completion. Type the data-frame name and '$', call the ~kc-ess-r-complete-name~ function after that. Make sure that if it is org-src-edit buffer, that it is associated with an ESS process by using ~C-c C-s~.
