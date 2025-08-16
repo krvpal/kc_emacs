@@ -837,7 +837,6 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
 (:states '(normal visual)
          :keymaps 'emms-playlist-mode-map
          "q" #'kc-emms-smart-bury-buffer
-         "s" #'kc-emms-transient-playlist-sort
          "M-k" #'emms-playlist-mode-shift-track-up
          "M-j" #'emms-playlist-mode-shift-track-down
          )
@@ -863,6 +862,11 @@ Evil collection overrides my keys, so the below is additionally needed for keys 
                                          :keymaps 'emms-browser-mode-map
                                          "s" #'kc-emms-transient-search-by)))
 
+(add-hook 'evil-collection-setup-hook (lambda (_mode keymaps)
+                                        (general-define-key
+                                         :states '(normal visual motion)
+                                         :keymaps 'emms-playlist-mode-map
+                                         "s" #'kc-emms-transient-playlist-sort)))
 #+end_src
 *** Custom functions
 :PROPERTIES:
