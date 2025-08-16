@@ -302,6 +302,7 @@ auto-capitalize-words variable that has been set using this."
     "og" #'kc-kanban-gtd
     "r" #'evil-redo
     "sd" #'consult-ripgrep
+    "sf" #'consult-fd
     "si" #'imenu
     "sq" #'query-replace
     "ss" #'consult-line
@@ -3380,7 +3381,7 @@ Activate and deactivate python virtual environments. Ensure that the minor mode 
   :general
   (:states '(normal visual)
            "SPC ss" #'consult-line
-	   "SPC sf" #'consult-locate
+           "SPC sl" #'consult-locate
            )
   :preface
   (defun kc-consult-ripgrep (oldfun &rest args)
