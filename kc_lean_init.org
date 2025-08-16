@@ -1670,7 +1670,7 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
 
 (setq org-src-window-setup 'current-window)
 
-(setq org-preview-latex-image-directory "~/.emacs.d/cache/")
+(setq org-preview-latex-image-directory "~/.emacs.d/.kc_cache/latex_previews/")
 
 ;; Default applications that org opens when following org links based
 ;; on files or type of links
@@ -1730,7 +1730,12 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
         ))
 
 (kc-add-to-list-multiple 'org-modules '(org-habit org-checklist org-tempo org-id org-crypt org-inlinetask))
-(kc-add-to-list-multiple 'org-export-backends '(taskjuggler md pandoc))
+(kc-add-to-list-multiple 'org-export-backends '(taskjuggler md pandoc hugo))
+
+;; ox-hugo actually checks if org-preview-latex-image-directory is set
+;; or not. Below had to be a different folder than the same cache dir
+;; for latex
+(setq org-hugo-base-dir (expand-file-name "~/.emacs.d/.kc_cache/hugo_base/"))
 
 (setq org-todo-keywords '((sequence "TODO(t!)" "READY(r!)" "NEXT(n!)" "WORKING(w!)" "WAIT(W@/!)" "SOMEDAY(s!)" "|" "DONE(d!)" "CANCEL(c@/!)"))
       org-todo-keyword-faces
