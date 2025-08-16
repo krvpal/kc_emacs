@@ -1954,7 +1954,6 @@ visibility of the corresponding subtree.  Otherwise, indent the current line
         ("A)" . "1)")
         ))
 
-(kc-add-to-list-multiple 'org-modules '(org-habit org-checklist org-tempo org-id org-crypt org-inlinetask))
 (kc-add-to-list-multiple 'org-export-backends '(taskjuggler md pandoc hugo))
 
 ;; ox-hugo actually checks if org-preview-latex-image-directory is set
