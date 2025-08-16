@@ -824,9 +824,10 @@ My docs: [[id:7FE0C051-892A-46AA-A973-1AFFA8EF7D2E][EMMS music in Emacs]]
 (:states '(normal visual)
          "SPC M" #'emms-smart-browse
          "SPC P" #'kc-emms-smart-go-to-playlist
-         "SPC ps" #'emms-shuffle
-         "SPC pp" #'emms-playlist-mode-go-popup
          "SPC pa" #'emms-add-playlist-directory-tree
+         "SPC po" #'emms-play-playlist
+         "SPC pp" #'emms-playlist-mode-go-popup
+         "SPC ps" #'emms-shuffle
          )
 (:states '(normal visual motion)
          :keymaps 'emms-browser-mode-map
@@ -989,6 +990,7 @@ Eg. if CURRENT-MAPPING is currently \\='info-artist, return
       emms-info-functions '(emms-info-native))
 
 (setq emms-mode-line-length-limit 10)
+(setq emms-mode-line-mode-line-function 'emms-mode-line-playlist-current)
 (setq emms-playlist-mode-window-width 50)
 
 (setq emms-source-file-default-directory (expand-file-name "~/Music/beets"))
