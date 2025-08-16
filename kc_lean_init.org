@@ -1046,6 +1046,23 @@ This package adds additional font-lock rules to provide a more colourful Dired b
 
   )
 #+end_src
+** Exec path from shell
+#+begin_src emacs-lisp
+(if (eq system-type 'darwin)
+    (use-package exec-path-from-shell
+      :ensure t
+      :config
+
+      ;; any other shell var that needs to be copied over, aprt from
+      ;; PATH which is automatic
+      (dolist (var '("LANG" "HOMEBREW_CASK_OPTS"))
+        (add-to-list 'exec-path-from-shell-variables var))
+
+      (when (memq window-system '(mac ns))
+        (exec-path-from-shell-initialize))
+
+      ))
+#+end_src
 ** Garbage collection magic hack
 #+begin_src emacs-lisp
 (use-package gcmh
