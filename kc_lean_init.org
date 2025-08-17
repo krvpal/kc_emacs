@@ -3937,6 +3937,38 @@ library/userland functions"
     )
   )
 #+end_src
+
+** Minor mode for visible search only
+#+begin_src emacs-lisp
+;; This variable will remember your original setting (e.g., 'open).
+(defvar kc-original-search-invisible-value nil
+  "Stores the original value of `search-invisible` before it's temporarily changed.")
+
+(define-minor-mode kc-visible-search-mode
+  "A minor mode to temporarily set `search-invisible' to nil.
+When turned on, searching is restricted to visible text only.
+When turned off, the original value of `search-invisible' is restored."
+  :init-value nil
+  :lighter " VisSrch"
+  ;; This block of code runs every time the mode is toggled.
+  (if kc-visible-search-mode
+      ;; --- Code to run when the mode is turned ON ---
+      ;; When the mode is active, we want to search VISIBLE text only.
+      ;; To do this, we must set `search-invisible` to `nil`.
+      (progn
+        ;; 1. Remember the current value (e.g., 'open).
+        (setq kc-original-search-invisible-value search-invisible)
+        ;; 2. Set the value for visible-only searching.
+        (setq search-invisible nil))
+    ;; --- Code to run when the mode is turned OFF ---
+    ;; When the mode is inactive, we want to restore the original behavior.
+    (progn
+      ;; 1. Restore the exact value we saved.
+      (setq search-invisible kc-original-search-invisible-value))))
+
+;; (Optional but recommended) Create a user-friendly alias for the command.
+(defalias 'kc-toggle-visible-search #'kc-visible-search-mode)
+#+end_src
 ** Startup splash or dashboard screen
 
 Borrowed from doom Emacs doom-dashboard
